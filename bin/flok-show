@@ -4,12 +4,22 @@ var path = require('path');
 var program = require('commander');
 var Table = require('cli-table');
 var colors = require('colors');
-var get = require('mout/object/get');
+// var get = require('mout/object/get');  //https://github.com/mout/mout/issues/125
 var filter = require('mout/array/filter');
 var pluck = require('mout/array/pluck');
+var unCamelCase = require('mout/string/unCamelCase');
+var properCase = require('mout/string/properCase');
 
 //TODO: this is only working for the headers, not the status column
 if (!process.stdout.isTTY) colors.mode = 'none';
+
+var keyTitleMap = {
+  'status.signature': 'Run Signature',
+  'status.error.message': 'Error Message'
+};
+function title(name) {
+  return keyTitleMap[name] || properCase(unCamelCase(name.substr(name.indexOf('.') + 1)));
+}
 
 // options specific to flok-show
 program
@@ -42,25 +52,18 @@ flok.load(function (err) {
     what === 'changed' ? changedMigrations() :
     false;
 
-
-// all (status.runTime ASC, time DESC)
-// state, id, title, status.runMethod, status.runTime
-
-// blocked (status.runTime ASC)
-// id, title, status.runMethod, isChanged, status.error.message
-
-// pending (time DESC)
-// id, title, isErrored, isChanged
-
-// done (status.runTime ASC)
-// id, title, status.runTime
-
-// changed (status.runTime ASC)
-// id, title, status.runTime, signature, status.signature
-
   if (migrations === false) {
     console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed');
     return process.exit(1);
+  }
+
+  // set view columns
+  var columns = {
+    all: ['state', 'id', 'title', 'status.runMethod', 'status.runTime'], //(status.runTime ASC, time DESC)
+    pending: ['id', 'title', 'isErrored', 'isChanged'], //(time DESC)
+    blocked: ['id', 'title', 'status.runMethod', 'isChanged', 'status.error.message'], //(status.runTime ASC)
+    done: ['id', 'title', 'status.runTime'], //(status.runTime ASC)
+    changed: ['id', 'title', 'signature', 'status.signature', 'status.runTime'] //(status.runTime ASC)
   }
 
   // if (migrations.length === 0) {
@@ -70,9 +73,10 @@ flok.load(function (err) {
 
   //TODO: option to customise headers (or display all)
 
-  //TODO: different headers depending what
-
-  var headers = ['Status', 'ID', 'Title', 'Run', 'Run Time'];
+  // headers from column names
+  var headers = columns[what].map(function (col) {
+    return title(col);
+  });
 
   // start col widths tracking with width of headers
   var widest = pluck(headers, 'length');
@@ -80,7 +84,7 @@ flok.load(function (err) {
   // get rows of data for the table & calculate largest colWidths
   var rows = [];
   migrations.forEach(function (m) {
-    var r = rowOf(m, ['state', 'id', 'title', 'status.runMethod', 'status.runTime']);
+    var r = rowOf(m, columns[what]);
     for (var i = 0; i < r.length; i++) {
       widest[i] = Math.max(r[i].length, widest[i] || 0);
     };
@@ -134,6 +138,20 @@ function shrink(a, padding) {
   }
 }
 
+// modified from mout/object/get to not throw when something mid-namespace is `null`
+// https://github.com/mout/mout/issues/125
+function get(obj, prop){
+  var parts = prop.split('.'),
+      last = parts.pop();
+
+  while (prop = parts.shift()) {
+    obj = obj[prop];
+    if (typeof obj !== 'object' || obj === null) return;
+  }
+
+  return obj[last];
+}
+
 function rowOf(m, fields) {
   var row = [];
 
@@ -143,9 +161,9 @@ function rowOf(m, fields) {
                             'yellow';
 
   fields.forEach(function (f) {
-    var v = get(m, f) || '';
     // TODO: get table to display row colors properly without messing up width
-    // var v = (get(m, f) || '')[color];
+    // var v = (get(m, f) || '').toString()[color];
+    var v = (get(m, f) || '').toString();
     if (f === 'state') v = v[color];
 
     // format dates
