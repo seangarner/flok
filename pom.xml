@@ -63,12 +63,7 @@
                             <filemode>755</filemode>
                             <sources>
                                 <source>
-                                    <location>bin/flok</location>
-                                    <location>bin/flok-down</location>
-                                    <location>bin/flok-init</location>
-                                    <location>bin/flok-lock</location>
-                                    <location>bin/flok-show</location>
-                                    <location>bin/flok-up</location>
+                                    <location>bin</location>
                                 </source>
                             </sources>
                         </mapping>
