@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+var program = require('commander');
+
+// flok-lock options
+program
+  .option('--clear', 'remove the lock');
+
+// setup flok specific options on program and get back a flok instance
+var flok = require('./flok').my(program);
+
+if (program.clear) {
+  unlock(flok);
+} else {
+  lock(flok);
+}
+
+function lock(flok) {
+  flok.lock(function (err) {
+    if (err) {
+      console.error('ERROR locking:', err.message);
+      return process.exit(1);
+    }
+    //TODO: emit done/end or similar on flok so db connections can be closed properly?
+    process.exit(0);
+  });
+}
+
+function unlock(flok) {
+  flok.unlock(function (err) {
+    if (err) {
+      console.error('ERROR removing lock:', err.message);
+      return process.exit(1);
+    }
+    //TODO: emit done/end or similar on flok so db connections can be closed properly?
+    process.exit(0);
+  });
+}

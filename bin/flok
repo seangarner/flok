@@ -1,0 +1,237 @@
+#!/usr/bin/env node
+var path = require('path');
+var Table = require('cli-table');
+var colors = require('colors');
+var fs = require('fs');
+
+// only print colours on a real terminal
+if (!process.stdout.isTTY) colors.mode = 'none';
+
+
+// get an option from argv or config before program.parse
+function preParseOption(l, s, argv) {
+  // look for the option in argv covering when it's `--opt=foobar`
+  var  i = argv.indexOf(l);
+  if (i === -1) i = argv.indexOf(s);
+
+  // maybe it's come in --argument=value style
+  if (i === -1) {
+    for (var ii = 0; ii < argv.length; ii++) {
+      // --long=value
+      i = argv[ii].indexOf(l + '=');
+      if (i !== -1) return argv[ii].substr(argv[ii].indexOf(l + '='));
+      // -s=value
+      i = argv[ii].indexOf(s + '=');
+      if (i !== -1) return argv[ii].substr(argv[ii].indexOf(s + '='));
+    }
+  }
+
+  // no dice
+  if (i === -1) return false;
+
+  // return the argument if there is one
+  if (argv[i + 1] && argv[i + 1][0] !== '-') return argv[i + 1];
+
+  // otherwise true for finding it at all
+  return true;
+}
+
+
+// remove an option from argv
+function removeOption(opts) {
+  for (var i = 0; i < opts.length; i++) {
+    // look for the option in argv covering when it's `--opt=foobar`
+    var i = process.argv.indexOf(l) || process.argv.indexOf(l + '=');
+    if (i === -1) continue;
+
+    process.argv.splice(i, 1);
+
+    // see if there's a value after that needs removing also
+    if (process.argv[i][0] !== '-') process.argv.splice(i, 1);
+  };
+
+}
+
+
+// read options from flok.opts (thanks mocha!)
+var _config = [];
+var _configLoaded = false;
+function _loadConfig(noSplit) {
+  if (_configLoaded) return noSplit ? _config : _config.split(/\s+/);
+
+  // get config location
+  // var name = path.basename(process.argv[1]);
+  // var file = process.env.FLOCKOPTS || path.resolve(name + '.opts');
+  var file = process.env.FLOCKOPTS || path.resolve('flok.opts');
+
+  // load config file
+  try {
+    _config = fs.readFileSync(file, 'utf8').trim();
+  } catch (err) {
+    _config = '';
+  }
+  _configLoaded = true;
+  return noSplit ? _config : _config.split(/\s+/);
+}
+
+
+// load flok.opts into argv ()
+function loadConfig(program) {
+  var opts = _loadConfig('no_split').split('\n');
+
+  // only load options which aren't already present and add them to the end of the argv
+  var opt;
+  for (var i = 0; i < opts.length; i++) {
+    opt = opts[i].split(/\s+/);
+    if (!preParseOption(opt[0], null, process.argv)) process.argv.push.apply(process.argv, opt);
+  }
+
+  // stop commander exiting when it sees an option it doesn't recognise
+  // this is necessary because config may have an option not supported by all the flok programs
+  program.Command.prototype.unknownOption = function () {};
+}
+
+
+// check for signs of user requesting help
+function needHelp() {
+  var argv = process.argv;
+  if (argv.indexOf('-h') !== -1) return true;
+  if (argv.indexOf('--help') !== -1) return true;
+  if (argv.indexOf('help') === argv.length - 1) return true;
+  if (argv.indexOf('help') === argv.length - 2) return true;
+  return false;
+}
+
+
+/**
+ * Load modules from --modules
+ * To support 3rd party modules that can hook onto each bin and set new commands and options
+ */
+function loadModules(program) {
+
+  var name = path.basename(process.argv[1]);
+
+  // add custom output for --modules to help because we can't register --modules as an option
+  // since we need to use it before we parse so modules can add options & commands to program
+  program.on('--help', function () {
+    console.log('  Loading Modules:');
+    console.log('');
+    console.log('     Flok supports loading extra functionality at runtime through flok');
+    console.log('     modules. If installed globally in npm they can be referenced by name');
+    console.log('     otherwise you must specify their absolute path.  Once loaded they may');
+    console.log('     add extra help to this screen so make sure to run --help once again');
+    console.log('     with the modules enabled to get information on how to configure them.');
+    console.log('');
+  });
+  program.option('-m, --modules <name or absolte path>', 'comma separated list of modules to extend flok with');
+
+  // load from cli arg first then if not present from flok.opts
+  var mods = preParseOption('-m', '--modules', process.argv);
+  if (!mods) mods = preParseOption('-m', '--modules', _loadConfig());
+  if (!mods) return [];
+
+  mods = mods.split(',');
+
+  // load each module
+  var onParsedCallbacks = [];
+  mods.forEach(function (file) {
+    try {
+      var m = require(file);
+    } catch (e) {
+      console.error('error loading [%s]: %s', file, e.message);
+      process.exit(1);
+    }
+
+    if (m[name] instanceof Function) {
+      var cb = m[name](program);
+      if (cb instanceof Function) onParsedCallbacks.push(cb);
+    }
+  });
+
+  return onParsedCallbacks;
+}
+
+
+/**
+ * keep other bin files dry by having options and flok creation reusable
+ */
+function flokme(program) {
+  var flokjs = require('..');
+
+  // load args from flok.opts
+  if (!needHelp()) loadConfig(program);
+
+  // pre-parse argv for --modules, load them and call `onCli` so they can register options and
+  // commands and send back a function to be executed when program is parsed
+  var onParsedCallbacks = loadModules(program);
+
+  // setup common options required to create a flok instance
+  program
+    .option('-m, --migrations <path>', 'path to migrations', path.resolve('migrations'))
+    .option('-l, --level <level>', 'log at trace, debug, info, warn, error, alert, fatal', 'info')
+    .option('-v, --verbose', 'shortcut for `--level debug --log`');
+
+  program.parse(process.argv);
+
+  // new flok instance with console logger
+  var flok = new flokjs.Flok({
+    migrationsDir: path.resolve(program.migrations),
+    lockFile: path.join(path.resolve(program.migrations), 'flok.lock')
+  });
+  var logger = new flokjs.ConsoleLogger({
+    level: program.verbose ? 'debug' : program.level
+  });
+  flok.extend(logger);
+
+  // send flok to each module so it can extend it
+  onParsedCallbacks.forEach(function (cb) {
+    cb(flok);
+  });
+
+  return flok;
+}
+
+
+function main() {
+
+  // fix executing subcommands when being run via a symlink
+  var desymlinkified = path.join(__dirname, path.basename(process.argv[1]));
+  process.argv[1] = desymlinkified;
+
+  var program = require('commander');
+
+  program
+    .version(require('../package').version)
+    .usage('[command] [options]')
+    .command('show [mode]', 'show migrations information')
+    .command('up',          'run up migrations')
+    .command('down',        'back out 1 migration at a time')
+    .command('init',        'create a new migration using a generator')
+    .command('lock',        'override flok locking');
+
+  //TODO: .command('reset', 'reset a single migrations state') should require confirmation
+  //TODO: .command('bootstrap', 'setup this project (i.e PWD) for migrations')
+  //TODO: .command('import', 'import already done migrations into state store')
+
+  // load flok.opts
+  if (!needHelp()) loadConfig(program);
+
+  // load --modules
+  loadModules(program);
+
+  program.parse(process.argv);
+
+  // catch when we don't have any args at all
+  if (!program.args.length) program.help();
+
+}
+
+//--- export when we're being require()'d
+if (require.main !== module) {
+  module.exports.my = flokme;
+  module.exports.loadModules = loadModules;
+
+//--- or run standalone when we aren't
+} else {
+  main();
+}

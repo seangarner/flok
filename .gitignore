@@ -1,0 +1,5 @@
+.DS_Store
+node_modules
+
+# test status directories
+test/migrations/flokStatus

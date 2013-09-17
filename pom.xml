@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>flok</groupId>
+    <artifactId>flok</artifactId>
+    <packaging>pom</packaging>
+    <version>2</version>
+    <name>flok</name>
+    <description>Flok - managed migrations</description>
+    <organization>
+        <name>Flok</name>
+        <url>https://github.com/seangarner/flok</url>
+    </organization>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>rpm-maven-plugin</artifactId>
+                <version>2.1-alpha-1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>rpm</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <name>flok</name>
+                    <version>${rpmversion}</version>
+                    <release>${rpmrelease}</release>
+                    <copyright>2013, Sean Garner &lt;seanlgarner+flok@gmail.com&gt;</copyright>
+                    <distribution>Amazon</distribution>
+                    <group>Applications/System</group>
+                    <packager>Sean Garner &lt;seanlgarner+flok@gmail.com&gt;</packager>
+                    <needarch>x86_64</needarch>
+                    <prefix>/opt/ecommera/flok</prefix>
+                    <defineStatements>
+                        <defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
+                    </defineStatements>
+                    <defaultFilemode>644</defaultFilemode>
+                    <defaultDirmode>755</defaultDirmode>
+                    <defaultUser>root</defaultUser>
+                    <defaultGroup>root</defaultGroup>
+                    <requires>
+                        <require>nodejs &gt; 0.8.0</require>
+                    </requires>
+                    <mappings>
+                        <mapping>
+                            <directory>/opt/ecommera/flok</directory>
+                            <directoryIncluded>true</directoryIncluded>
+                            <sources>
+                                <source>
+                                    <location>./</location>
+                                    <excludes>
+                                         <exclude>bin</exclude>
+                                    </excludes>
+                                </source>
+                            </sources>
+                        </mapping>
+                        <mapping>
+                            <directory>/opt/ecommera/flok/bin</directory>
+                            <directoryIncluded>false</directoryIncluded>
+                            <filemode>755</filemode>
+                            <sources>
+                                <source>
+                                    <location>release/bin/flok</location>
+                                </source>
+                            </sources>
+                        </mapping>
+                    </mappings>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

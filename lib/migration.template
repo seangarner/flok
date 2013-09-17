@@ -1,0 +1,17 @@
+module.exports.id = '{{id}}';
+module.exports.title = '{{title}}';
+module.exports.time = {{time}};
+
+module.exports.dependencies = [
+  /* dependencies by id */
+];
+
+module.exports.up = function up(flok, done) {
+  // body
+  done();
+};
+
+module.exports.down = function down(flok, done) {
+  // body
+  done();
+};

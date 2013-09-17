@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+var program = require('commander');
+
+// flok-up options
+// program
+//   .option('-n, --noop', 'show what would happen');
+
+// setup flok specific options on program and get back a flok instance
+var flok = require('./flok').my(program);
+
+flok.on('up', function (migration) {
+  //do something per migration?
+});
+
+// up migrations
+flok.up(null, function (err) {
+  if (err) {
+    console.error('ERROR migrating up:', err.message);
+    return process.exit(1);
+  }
+  //TODO: emit done/end or similar on flok so db connections can be closed properly?
+  process.exit(0);
+});

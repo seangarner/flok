@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var program = require('commander');
+
+program
+  .option('-m, --migrations <path>', 'path to migrations', path.resolve('migrations'));
+
+  //TODO: command to list available generators
+  //TODO: command to select generator
+
+require('./flok').my(program);
+
+var migrationsDir = path.resolve(program.migrations);
+
+var filename = require('../lib/migration').generate(migrationsDir);
+
+console.log('have created ' + filename);

@@ -1,0 +1,36 @@
+{
+  "name": "flok",
+  "homepage": "https://github.com/seangarner/flok",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/seangarner/flok.git"
+  },
+  "version": "0.1.0",
+  "author": "Sean Garner <seanlgarner@gmail.com>",
+  "description": "Controlled migrations",
+  "bin": "./bin/flok",
+  "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha ./test"
+  },
+  "main": "./lib/flok.js",
+  "readme": "README.md",
+  "dependencies": {
+    "async": "0.x",
+    "mout": "0.x",
+    "commander": "2.x",
+    "cli-table": "0.x",
+    "colors": "0.x",
+    "mongodb": "1.x"
+  },
+  "devDependencies": {
+    "mocha": "1.x",
+    "should": "1.x",
+    "jshint": "0.x"
+  },
+  "engines": {
+    "node": ">=0.8"
+  },
+  "scripts": {
+    "test": "make test"
+  }
+}

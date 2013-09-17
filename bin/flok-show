@@ -1,0 +1,198 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var program = require('commander');
+var Table = require('cli-table');
+var colors = require('colors');
+var get = require('mout/object/get');
+var filter = require('mout/array/filter');
+var pluck = require('mout/array/pluck');
+
+//TODO: this is only working for the headers, not the status column
+if (!process.stdout.isTTY) colors.mode = 'none';
+
+// options specific to flok-show
+program
+  .usage('[options] [all|pending|blocked|done|changed]')
+  .option('-c, --compact', 'compact table layout')
+  .option('-s, --no-shrink', 'always display table at max width of data')
+
+//TODO: limit table rows
+//TODO: sort options
+
+// setup flok specific options on program and get back a flok instance
+var flok = require('./flok').my(program);
+
+// what are we viewing
+var what = (program.args.pop() || 'all').toLowerCase();
+
+// load migrations then display
+flok.load(function (err) {
+  if (err) {
+    console.error('ERROR loading migrations:', err.message);
+    return process.exit(1);
+  }
+
+  // filter and sort migrations depending on task
+  var migrations =
+    what === 'all'     ? allMigrations() :
+    what === 'pending' ? pendingMigrations() :
+    what === 'blocked' ? blockedMigrations() :
+    what === 'done'    ? doneMigrations() :
+    what === 'changed' ? changedMigrations() :
+    false;
+
+
+// all (status.runTime ASC, time DESC)
+// state, id, title, status.runMethod, status.runTime
+
+// blocked (status.runTime ASC)
+// id, title, status.runMethod, isChanged, status.error.message
+
+// pending (time DESC)
+// id, title, isErrored, isChanged
+
+// done (status.runTime ASC)
+// id, title, status.runTime
+
+// changed (status.runTime ASC)
+// id, title, status.runTime, signature, status.signature
+
+  if (migrations === false) {
+    console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed');
+    return process.exit(1);
+  }
+
+  // if (migrations.length === 0) {
+  //   console.log('no migrations found by filtering by %s', what);
+  //   return process.exit(0);
+  // }
+
+  //TODO: option to customise headers (or display all)
+
+  //TODO: different headers depending what
+
+  var headers = ['Status', 'ID', 'Title', 'Run', 'Run Time'];
+
+  // start col widths tracking with width of headers
+  var widest = pluck(headers, 'length');
+
+  // get rows of data for the table & calculate largest colWidths
+  var rows = [];
+  migrations.forEach(function (m) {
+    var r = rowOf(m, ['state', 'id', 'title', 'status.runMethod', 'status.runTime']);
+    for (var i = 0; i < r.length; i++) {
+      widest[i] = Math.max(r[i].length, widest[i] || 0);
+    };
+    rows.push(r);
+  });
+
+  // auto shrink columns if wider than tty
+  if (program.shrink) shrink(widest);
+
+  // setup table
+  var table = new Table({
+    head: headers,
+    colWidths: widest,
+    style: {
+      compact: program.compact,
+      border: ['grey'],  // in hoping that cli-table master will eventually be tagged and published
+      head: ['bold']
+    }
+  });
+
+  // load rows into the table
+  for (var i = 0; i < rows.length; i++) {
+    table.push(rows[i]);
+  };
+
+  // display the table
+  console.log(table.toString());
+
+  //TODO: emit done/end or similar on flok so db connections can be closed properly?
+  process.exit(0);
+
+});
+
+/**
+ * take an array of column widths and if the sum is larger than the terminal width then shrink the
+ * largest column by 1.  repeats until the sum is less than the terminal width
+ *
+ * compensates for width of borders but assumes 1 char and no padding, send second argument to
+ * adjust padding manually.
+ */
+function shrink(a, padding) {
+  if (a.reduce(add, 0) > (padding || (process.stdout.columns - a.length - 1))) {
+    var largest = 0;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] > a[largest]) {
+        largest = i;
+      }
+    };
+    a[largest]--;
+    shrink(a);
+  }
+}
+
+function rowOf(m, fields) {
+  var row = [];
+
+  var color = m.isProblem ? 'red' :
+              m.isPending ? 'white' :
+              m.isDone    ? 'grey' :
+                            'yellow';
+
+  fields.forEach(function (f) {
+    var v = get(m, f) || '';
+    // TODO: get table to display row colors properly without messing up width
+    // var v = (get(m, f) || '')[color];
+    if (f === 'state') v = v[color];
+
+    // format dates
+    if (f === 'status.runTime' || f === 'time') v = formatDate(v);
+
+    row.push(v);
+  });
+  return row;
+}
+
+function formatDate(d){
+  if (!d) return '';
+  if (!(d instanceof Date)) d = new Date(d);
+  function pad(n) { return n < 10 ? '0' + n : n; }
+  return d.getUTCFullYear() + '-' +
+    pad(d.getUTCMonth() + 1) + '-' +
+    pad(d.getUTCDate()) + ' ' +
+    pad(d.getUTCHours()) + ':' +
+    pad(d.getUTCMinutes()) + ':' +
+    pad(d.getUTCSeconds()) + ' UTC';
+}
+
+function allMigrations() {
+  var m = flok.migrations.slice(0);
+  m.sort(function (a, b) {
+    a.status.runTime - b.status.runTime;
+    //TODO: add secondary sorting by .time DESC
+  });
+  return m;
+}
+
+function pendingMigrations() {
+  return filter(allMigrations(), 'isPending');
+}
+
+function blockedMigrations() {
+  return filter(allMigrations(), 'isProblem');
+}
+
+function doneMigrations() {
+  return filter(allMigrations(), 'isDone');
+}
+
+function changedMigrations() {
+  return filter(allMigrations(), 'isChanged');
+}
+
+function add(a, b) {
+  return a + b;
+}

@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+
+var program = require('commander');
+
+// options specific to flok-down
+// program
+//   .option('-n, --noop', 'show what would happen')
+
+// setup flok specific options on program and get back a flok instance
+var flok = require('./flok').my(program);
+
+flok.on('down', function (migration) {
+  //do something per migration?
+});
+
+// down migration
+flok.down(null, function (err) {
+  if (err) {
+    console.error('ERROR migrating down:', err.message);
+    return process.exit(1);
+  }
+  //TODO: emit done/end or similar on flok so db connections can be closed properly?
+  process.exit(0);
+});
