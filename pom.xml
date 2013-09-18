@@ -39,8 +39,8 @@
                     </defineStatements>
                     <defaultFilemode>644</defaultFilemode>
                     <defaultDirmode>755</defaultDirmode>
-                    <defaultUsername>root</defaultUser>
-                    <defaultGroupname>root</defaultGroup>
+                    <defaultUsername>root</defaultUsername>
+                    <defaultGroupname>root</defaultGroupname>
                     <requires>
                         <require>nodejs &gt; 0.8.0</require>
                     </requires>
