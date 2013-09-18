@@ -65,9 +65,17 @@
                                 <source>
                                     <location>bin</location>
                                 </source>
+                            </sources>
+                        </mapping>
+                        <mapping>
+                            <directory>/usr/local/bin</directory>
+                            <sources>
+                                <source>
+                                    <location>bin</location>
+                                </source>
                                 <softlinkSource>
                                     <location>bin/flok</location>
-                                    <destination>/usr/local/bin/flok</destination>
+                                    <destination>flok</destination>
                                 </softlinkSource>
                             </sources>
                         </mapping>
