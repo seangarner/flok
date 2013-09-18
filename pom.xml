@@ -71,7 +71,7 @@
                             <directory>/usr/local/bin</directory>
                             <sources>
                                 <softlinkSource>
-                                    <location>bin/flok</location>
+                                    <location>/opt/ecommera/flok/bin/flok</location>
                                     <destination>flok</destination>
                                 </softlinkSource>
                             </sources>
