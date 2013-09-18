@@ -70,9 +70,6 @@
                         <mapping>
                             <directory>/usr/local/bin</directory>
                             <sources>
-                                <source>
-                                    <location>bin</location>
-                                </source>
                                 <softlinkSource>
                                     <location>bin/flok</location>
                                     <destination>flok</destination>
