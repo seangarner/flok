@@ -39,8 +39,8 @@
                     </defineStatements>
                     <defaultFilemode>644</defaultFilemode>
                     <defaultDirmode>755</defaultDirmode>
-                    <defaultUser>root</defaultUser>
-                    <defaultGroup>root</defaultGroup>
+                    <defaultUsername>root</defaultUser>
+                    <defaultGroupname>root</defaultGroup>
                     <requires>
                         <require>nodejs &gt; 0.8.0</require>
                     </requires>
@@ -65,6 +65,10 @@
                                 <source>
                                     <location>bin</location>
                                 </source>
+                                <softlinkSource>
+                                    <location>bin/flok</location>
+                                    <destination>/usr/local/bin/flok</destination>
+                                </softlinkSource>
                             </sources>
                         </mapping>
                     </mappings>
