@@ -9,6 +9,7 @@ var filter = require('mout/array/filter');
 var pluck = require('mout/array/pluck');
 var unCamelCase = require('mout/string/unCamelCase');
 var properCase = require('mout/string/properCase');
+var forOwn = require('mout/object/forOwn');
 
 //TODO: this is only working for the headers, not the status column
 if (!process.stdout.isTTY) colors.mode = 'none';
@@ -52,9 +53,16 @@ flok.load(function (err) {
     what === 'changed' ? changedMigrations() :
     false;
 
+  // user didn't want a list of migrations, maybe a single migration?
   if (migrations === false) {
-    console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed');
-    return process.exit(1);
+    migrations = allMigrations();
+    var m = filter(migrations, {id: what});
+    if (m) {
+      return info(m[0]);
+    } else {
+      console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed, <id>');
+      return process.exit(1);
+    }
   }
 
   // set view columns
@@ -84,6 +92,7 @@ flok.load(function (err) {
   // get rows of data for the table & calculate largest colWidths
   var rows = [];
   migrations.forEach(function (m) {
+    console.dir(m);
     var r = rowOf(m, columns[what]);
     for (var i = 0; i < r.length; i++) {
       widest[i] = Math.max(r[i].length, widest[i] || 0);
@@ -117,6 +126,46 @@ flok.load(function (err) {
   process.exit(0);
 
 });
+
+
+function underline(s) {
+  return new Array(s.length + 1).join('=');
+}
+
+
+function info(m) {
+  console.log();
+  console.log(m.title);
+  console.log(underline(m.title));
+  console.log('State:', m.state);
+  console.log('ID:', m.id);
+  console.log('Created:', formatDate(m.time));
+  console.log('Signature:', m.signature);
+  console.log('Filename:', m.filename);
+  console.log();
+  console.log('Status');
+  console.log('------');
+  console.log('Method:', m.status.method);
+  console.log('Run Signature:', m.status.signature);
+  console.log('Run Time:', m.status.runTime);
+  console.log();
+  if (m.status.error) {
+    console.log('Error');
+    console.log('-----');
+    console.log('Message:', m.status.error.message);
+    forOwn(m.status.error, function (v, k) {
+      if (k === 'message' || k === '_stack' || k === 'stack') return;
+      console.log(k + ': ' + v);
+    });
+    console.log();
+    console.log('Error Stack');
+    console.log('-----------');
+    console.log(m.status.error.stack);
+  }
+  console.log();
+  process.exit(0);
+}
+
 
 /**
  * take an array of column widths and if the sum is larger than the terminal width then shrink the
