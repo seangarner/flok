@@ -57,7 +57,7 @@ flok.load(function (err) {
   if (migrations === false) {
     migrations = allMigrations();
     var m = filter(migrations, {id: what});
-    if (m) {
+    if (m && m[0]) {
       return info(m[0]);
     } else {
       console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed, <id>');
