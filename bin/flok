@@ -61,8 +61,8 @@ function _loadConfig(noSplit) {
 
   // get config location
   // var name = path.basename(process.argv[1]);
-  // var file = process.env.FLOCKOPTS || path.resolve(name + '.opts');
-  var file = process.env.FLOCKOPTS || path.resolve('flok.opts');
+  // var file = process.env.FLOKOPTS || path.resolve(name + '.opts');
+  var file = process.env.FLOKOPTS || path.resolve('flok.opts');
 
   // load config file
   try {
