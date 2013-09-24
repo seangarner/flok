@@ -224,6 +224,13 @@ function main() {
   // catch when we don't have any args at all
   if (!program.args.length) program.help();
 
+  // catch the exit code of a child pid if we've executed a command via a file
+  if (program.runningCommand) {
+    program.runningCommand.on('exit', function (code) {
+      process.exit(code);
+    });
+  }
+
 }
 
 //--- export when we're being require()'d
