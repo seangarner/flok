@@ -27,6 +27,7 @@ program
   .usage('[options] [all|pending|blocked|done|changed]')
   .option('-c, --compact', 'compact table layout')
   .option('-s, --no-shrink', 'always display table at max width of data')
+  .option('-C, --count', 'count migrations instead of print details');
 
 //TODO: limit table rows
 //TODO: sort options
@@ -63,6 +64,12 @@ flok.load(function (err) {
       console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed, <id>');
       return process.exit(1);
     }
+  }
+
+  // just want a count of migrations
+  if (program.count) {
+    console.log(migrations.length);
+    process.exit(0);
   }
 
   // set view columns
