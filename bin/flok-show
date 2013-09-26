@@ -36,7 +36,7 @@ program
 var flok = require('./flok').my(program);
 
 // what are we viewing
-var what = (program.args.pop() || 'all').toLowerCase();
+var what = program.args.pop() || 'all';
 
 // load migrations then display
 flok.load(function (err) {
@@ -47,11 +47,11 @@ flok.load(function (err) {
 
   // filter and sort migrations depending on task
   var migrations =
-    what === 'all'     ? allMigrations() :
-    what === 'pending' ? pendingMigrations() :
-    what === 'blocked' ? blockedMigrations() :
-    what === 'done'    ? doneMigrations() :
-    what === 'changed' ? changedMigrations() :
+    what.toLowerCase() === 'all'     ? allMigrations() :
+    what.toLowerCase() === 'pending' ? pendingMigrations() :
+    what.toLowerCase() === 'blocked' ? blockedMigrations() :
+    what.toLowerCase() === 'done'    ? doneMigrations() :
+    what.toLowerCase() === 'changed' ? changedMigrations() :
     false;
 
   // user didn't want a list of migrations, maybe a single migration?

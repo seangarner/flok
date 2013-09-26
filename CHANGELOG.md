@@ -1,6 +1,11 @@
 flok changelog
 ==============
 
+0.2.1 (2013/09/26)
+------------------
+
+ - fix `flok show <id>` when `<id>` has an uppercase letter
+
 0.2.0 (2013/09/25)
 ------------------
 
