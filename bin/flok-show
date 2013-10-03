@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-var path = require('path');
 var program = require('commander');
 var Table = require('cli-table');
 var colors = require('colors');
@@ -18,9 +17,6 @@ var keyTitleMap = {
   'status.signature': 'Run Signature',
   'status.error.message': 'Error Message'
 };
-function title(name) {
-  return keyTitleMap[name] || properCase(unCamelCase(name.substr(name.indexOf('.') + 1)));
-}
 
 // options specific to flok-show
 program
@@ -35,109 +31,26 @@ program
 // setup flok specific options on program and get back a flok instance
 var flok = require('./flok').my(program);
 
-// what are we viewing
-var what = program.args.pop() || 'all';
-
-// load migrations then display
-flok.load(function (err) {
-  if (err) {
-    console.error('ERROR loading migrations:', err.message);
-    return process.exit(1);
-  }
-
-  // filter and sort migrations depending on task
-  var migrations =
-    what.toLowerCase() === 'all'     ? allMigrations() :
-    what.toLowerCase() === 'pending' ? pendingMigrations() :
-    what.toLowerCase() === 'blocked' ? blockedMigrations() :
-    what.toLowerCase() === 'done'    ? doneMigrations() :
-    what.toLowerCase() === 'changed' ? changedMigrations() :
-    false;
-
-  // user didn't want a list of migrations, maybe a single migration?
-  if (migrations === false) {
-    migrations = allMigrations();
-    var m = filter(migrations, {id: what});
-    if (m && m[0]) {
-      return info(m[0]);
-    } else {
-      console.error('ERROR: unknown command (' + what + '): all, pending, blocked, done, changed, <id>');
-      return process.exit(1);
-    }
-  }
-
-  // just want a count of migrations
-  if (program.count) {
-    console.log(migrations.length);
-    process.exit(0);
-  }
-
-  // set view columns
-  var columns = {
-    all: ['state', 'id', 'title', 'status.runMethod', 'status.runTime'], //(status.runTime ASC, time DESC)
-    pending: ['id', 'title', 'isErrored', 'isChanged'], //(time DESC)
-    blocked: ['id', 'title', 'status.runMethod', 'isChanged', 'status.error.message'], //(status.runTime ASC)
-    done: ['id', 'title', 'status.runTime'], //(status.runTime ASC)
-    changed: ['id', 'title', 'signature', 'status.signature', 'status.runTime'] //(status.runTime ASC)
-  }
-
-  // if (migrations.length === 0) {
-  //   console.log('no migrations found by filtering by %s', what);
-  //   return process.exit(0);
-  // }
-
-  //TODO: option to customise headers (or display all)
-
-  // headers from column names
-  var headers = columns[what].map(function (col) {
-    return title(col);
-  });
-
-  // start col widths tracking with width of headers
-  var widest = pluck(headers, 'length');
-
-  // get rows of data for the table & calculate largest colWidths
-  var rows = [];
-  migrations.forEach(function (m) {
-    var r = rowOf(m, columns[what]);
-    for (var i = 0; i < r.length; i++) {
-      widest[i] = Math.max(r[i].length, widest[i] || 0);
-    };
-    rows.push(r);
-  });
-
-  // auto shrink columns if wider than tty
-  if (program.shrink) shrink(widest);
-
-  // setup table
-  var table = new Table({
-    head: headers,
-    colWidths: widest,
-    style: {
-      compact: program.compact,
-      border: ['grey'],  // in hoping that cli-table master will eventually be tagged and published
-      head: ['bold']
-    }
-  });
-
-  // load rows into the table
-  for (var i = 0; i < rows.length; i++) {
-    table.push(rows[i]);
-  };
-
-  // display the table
-  console.log(table.toString());
-
-  //TODO: emit done/end or similar on flok so db connections can be closed properly?
-  process.exit(0);
-
-});
-
+var what = (program.args.pop() || 'all').toLowerCase();
+function title(name) {
+  return keyTitleMap[name] || properCase(unCamelCase(name.substr(name.indexOf('.') + 1)));
+}
 
 function underline(s) {
   return new Array(s.length + 1).join('=');
 }
 
+function formatDate(d) {
+  if (!d) return '';
+  if (!(d instanceof Date)) d = new Date(d);
+  function pad(n) { return n < 10 ? '0' + n : n; }
+  return d.getUTCFullYear() + '-' +
+    pad(d.getUTCMonth() + 1) + '-' +
+    pad(d.getUTCDate()) + ' ' +
+    pad(d.getUTCHours()) + ':' +
+    pad(d.getUTCMinutes()) + ':' +
+    pad(d.getUTCSeconds()) + ' UTC';
+}
 
 function info(m) {
   console.log();
@@ -172,6 +85,9 @@ function info(m) {
   process.exit(0);
 }
 
+function add(a, b) {
+  return a + b;
+}
 
 /**
  * take an array of column widths and if the sum is larger than the terminal width then shrink the
@@ -187,7 +103,7 @@ function shrink(a, padding) {
       if (a[i] > a[largest]) {
         largest = i;
       }
-    };
+    }
     a[largest]--;
     shrink(a);
   }
@@ -195,7 +111,8 @@ function shrink(a, padding) {
 
 // modified from mout/object/get to not throw when something mid-namespace is `null`
 // https://github.com/mout/mout/issues/125
-function get(obj, prop){
+function get(obj, prop) {
+  /*jshint boss:true*/
   var parts = prop.split('.'),
       last = parts.pop();
 
@@ -229,22 +146,10 @@ function rowOf(m, fields) {
   return row;
 }
 
-function formatDate(d){
-  if (!d) return '';
-  if (!(d instanceof Date)) d = new Date(d);
-  function pad(n) { return n < 10 ? '0' + n : n; }
-  return d.getUTCFullYear() + '-' +
-    pad(d.getUTCMonth() + 1) + '-' +
-    pad(d.getUTCDate()) + ' ' +
-    pad(d.getUTCHours()) + ':' +
-    pad(d.getUTCMinutes()) + ':' +
-    pad(d.getUTCSeconds()) + ' UTC';
-}
-
 function allMigrations() {
   var m = flok.migrations.slice(0);
   m.sort(function (a, b) {
-    a.status.runTime - b.status.runTime;
+    return a.status.runTime - b.status.runTime;
     //TODO: add secondary sorting by .time DESC
   });
   return m;
@@ -266,6 +171,107 @@ function changedMigrations() {
   return filter(allMigrations(), 'isChanged');
 }
 
-function add(a, b) {
-  return a + b;
-}
+// what are we viewing
+var what = (program.args.pop() || 'all').toLowerCase();
+
+// load migrations then display
+flok.load(function (err) {
+  if (err) {
+    console.error('ERROR loading migrations:', err.message);
+    return process.exit(1);
+  }
+
+  // filter and sort migrations depending on task
+  var migrations =
+    what === 'all'     ? allMigrations() :
+    what === 'pending' ? pendingMigrations() :
+    what === 'blocked' ? blockedMigrations() :
+    what === 'done'    ? doneMigrations() :
+    what === 'changed' ? changedMigrations() :
+    false;
+
+  // user didn't want a list of migrations, maybe a single migration?
+  if (migrations === false) {
+    migrations = allMigrations();
+    var m = filter(migrations, {id: what});
+    if (m && m[0]) {
+      return info(m[0]);
+    } else {
+      console.error('ERROR: unknown command (' +
+                    what +
+                    '): all, pending, blocked, done, changed, <id>');
+      return process.exit(1);
+    }
+  }
+
+  // just want a count of migrations
+  if (program.count) {
+    console.log(migrations.length);
+    process.exit(0);
+  }
+
+  // set view columns
+  var columns = {
+    //(status.runTime ASC, time DESC)
+    all: ['state', 'id', 'title', 'status.runMethod', 'status.runTime'],
+    //(time DESC)
+    pending: ['id', 'title', 'isErrored', 'isChanged'],
+    //(status.runTime ASC)
+    blocked: ['id', 'title', 'status.runMethod', 'isChanged', 'status.error.message'],
+    //(status.runTime ASC)
+    done: ['id', 'title', 'status.runTime'],
+    //(status.runTime ASC)
+    changed: ['id', 'title', 'signature', 'status.signature', 'status.runTime']
+  };
+
+  // if (migrations.length === 0) {
+  //   console.log('no migrations found by filtering by %s', what);
+  //   return process.exit(0);
+  // }
+
+  //TODO: option to customise headers (or display all)
+
+  // headers from column names
+  var headers = columns[what].map(function (col) {
+    return title(col);
+  });
+
+  // start col widths tracking with width of headers
+  var widest = pluck(headers, 'length');
+
+  // get rows of data for the table & calculate largest colWidths
+  var rows = [];
+  migrations.forEach(function (m) {
+    var r = rowOf(m, columns[what]);
+    for (var i = 0; i < r.length; i++) {
+      widest[i] = Math.max(r[i].length, widest[i] || 0);
+    }
+    rows.push(r);
+  });
+
+  // auto shrink columns if wider than tty
+  if (program.shrink) shrink(widest);
+
+  // setup table
+  var table = new Table({
+    head: headers,
+    colWidths: widest,
+    style: {
+      compact: program.compact,
+      border: ['grey'],  // in hoping that cli-table master will eventually be tagged and published
+      head: ['bold']
+    }
+  });
+
+  // load rows into the table
+  for (var i = 0; i < rows.length; i++) {
+    table.push(rows[i]);
+  }
+
+  // display the table
+  console.log(table.toString());
+
+  //TODO: emit done/end or similar on flok so db connections can be closed properly?
+  process.exit(0);
+
+});

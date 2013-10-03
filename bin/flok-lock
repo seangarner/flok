@@ -1,37 +1,60 @@
 #!/usr/bin/env node
 var program = require('commander');
+var async = require('async');
+var inquirer = require('inquirer');
 
 // flok-lock options
 program
-  .option('--clear', 'remove the lock');
+  .option('--clear', 'remove the lock')
+  .option('-y, --yes', 'answer yes to all questions');
 
 // setup flok specific options on program and get back a flok instance
 var flok = require('./flok').my(program);
 
-if (program.clear) {
-  unlock(flok);
-} else {
-  lock(flok);
-}
+async.auto({
 
-function lock(flok) {
-  flok.lock(function (err) {
-    if (err) {
-      console.error('ERROR locking:', err.message);
-      return process.exit(1);
-    }
-    //TODO: emit done/end or similar on flok so db connections can be closed properly?
-    process.exit(0);
-  });
-}
+  //-- confirm user desire
+  confirm: function confirm(callback) {
+    // auto confirm
+    if (program.yes) return callback(null);
 
-function unlock(flok) {
-  flok.unlock(function (err) {
-    if (err) {
-      console.error('ERROR removing lock:', err.message);
-      return process.exit(1);
-    }
-    //TODO: emit done/end or similar on flok so db connections can be closed properly?
-    process.exit(0);
-  });
-}
+    // prompt for confirmation appropriately
+    var what = program.clear ? 'clear' : 'set';
+    inquirer.prompt([{
+      type: 'confirm',
+      name: 'confirmed',
+      message: 'Are you sure you wish to ' + what + ' the lock?',
+      default: false
+    }], function (res) {
+      if (!res.confirmed) return process.exit(0);
+      callback(null);
+    });
+  },
+
+  //-- lock migrations
+  lock: ['confirm', function lock(callback) {
+    if (program.clear) return callback(null);
+    flok.lock(function (err) {
+      if (err) {
+        console.error('ERROR locking:', err.message);
+        return process.exit(1);
+      }
+      //TODO: emit done/end or similar on flok so db connections can be closed properly?
+      process.exit(0);
+    });
+  }],
+
+  //-- unlock migrations
+  unlock: ['confirm', function unlock(callback) {
+    if (!program.clear) return callback(null);
+    flok.unlock(function (err) {
+      if (err) {
+        console.error('ERROR removing lock:', err.message);
+        return process.exit(1);
+      }
+      //TODO: emit done/end or similar on flok so db connections can be closed properly?
+      process.exit(0);
+    });
+  }]
+},
+function () {});

@@ -5,7 +5,7 @@
     "type": "git",
     "url": "git://github.com/seangarner/flok.git"
   },
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": "Sean Garner <seanlgarner@gmail.com>",
   "description": "Controlled migrations",
   "bin": "./bin/flok",
@@ -20,7 +20,8 @@
     "commander": "2.x",
     "cli-table": "0.x",
     "colors": "0.x",
-    "mongodb": "1.x"
+    "mongodb": "1.x",
+    "inquirer": "0.x"
   },
   "devDependencies": {
     "mocha": "1.x",

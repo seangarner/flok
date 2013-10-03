@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-var path = require('path');
-var Table = require('cli-table');
 var colors = require('colors');
+var path = require('path');
 var fs = require('fs');
 
 // only print colours on a real terminal
@@ -37,20 +36,20 @@ function preParseOption(l, s, argv) {
 }
 
 
-// remove an option from argv
-function removeOption(opts) {
-  for (var i = 0; i < opts.length; i++) {
-    // look for the option in argv covering when it's `--opt=foobar`
-    var i = process.argv.indexOf(l) || process.argv.indexOf(l + '=');
-    if (i === -1) continue;
+// // remove an option from argv
+// function removeOption(opts) {
+//   for (var i = 0; i < opts.length; i++) {
+//     // look for the option in argv covering when it's `--opt=foobar`
+//     var i = process.argv.indexOf(l) || process.argv.indexOf(l + '=');
+//     if (i === -1) continue;
 
-    process.argv.splice(i, 1);
+//     process.argv.splice(i, 1);
 
-    // see if there's a value after that needs removing also
-    if (process.argv[i][0] !== '-') process.argv.splice(i, 1);
-  };
+//     // see if there's a value after that needs removing also
+//     if (process.argv[i][0] !== '-') process.argv.splice(i, 1);
+//   };
 
-}
+// }
 
 
 // read options from flok.opts (thanks mocha!)
@@ -123,7 +122,8 @@ function loadModules(program) {
     console.log('     with the modules enabled to get information on how to configure them.');
     console.log('');
   });
-  program.option('-m, --modules <name or absolte path>', 'comma separated list of modules to extend flok with');
+  program.option('-m, --modules <name or absolte path>',
+                 'comma separated list of modules to extend flok with');
 
   // load from cli arg first then if not present from flok.opts
   var mods = preParseOption('-m', '--modules', process.argv);
@@ -135,8 +135,9 @@ function loadModules(program) {
   // load each module
   var onParsedCallbacks = [];
   mods.forEach(function (file) {
+    var m;
     try {
-      var m = require(file);
+      m = require(file);
     } catch (e) {
       console.error('error loading [%s]: %s', file, e.message);
       process.exit(1);

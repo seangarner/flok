@@ -1,18 +1,63 @@
 #!/usr/bin/env node
 
+var fs = require('fs');
 var path = require('path');
 var program = require('commander');
+var guid = require('mout/random/guid');
+var flok = require('./flok').my(program);
 
-program
-  .option('-m, --migrations <path>', 'path to migrations', path.resolve('migrations'));
+// Check for existance of migrations dir and create if absent
+try {
+  if (!fs.existsSync(program.migrations)) {
+    fs.mkdirSync(program.migrations);
+    flok.log.info('created migrations directory in %s', program.migrations);
+  }
+} catch (err) {
+  console.error('ERROR unable to check for or create migrations dir in ' + program.migrations);
+  console.error(err.message);
+  program.exit(1);
+}
 
-  //TODO: command to list available generators
-  //TODO: command to select generator
+// Load migrations
+flok.load(function (err) {
+  if (err) {
+    console.error('ERROR loading migrations:', err.message);
+    return process.exit(1);
+  }
 
-require('./flok').my(program);
+  // Propmpt for dependencies using available migrations
+  function getDependencies(program, done) {
+    flok.generate.prompt([{
+      name: 'dependencies',
+      type: 'checkbox',
+      message: 'dependencies',
+      choices: flok.migrations.map(function (v) { return v.title + '  <' + v.id + '>'; })
+    }], function (res) {
+      var deps = res.dependencies.map(function (v) {
+        return '  \'' + v.match(/  <(.*)>/, '').pop() + '\'';
+      });
+      done(null, deps.join(',\n'));
+    });
+  }
 
-var migrationsDir = path.resolve(program.migrations);
+  // Generate a basic migration skeleton
+  flok.generate
+    .export('id', { name: 'id', message: 'id', type: 'string', default: guid()}, '{{id}}')
+    .export('title')
+    .export('time', new Date().getTime())
+    .up('//code to migrate')
+    .down('//code to reverse a migration')
+    .register('dependencies', getDependencies);
 
-var filename = require('../lib/migration').generate(migrationsDir);
+  // Start the prompt process and write migration to file
+  flok.generate.toFile(flok.migrationsDir, function (err, filename) {
+    if (err) {
+      console.log(err.message);
+      return process.exit(1);
+    }
+    console.log();
+    console.log('migration created in ' + path.relative(process.cwd(), filename));
+    process.exit(0);
+  });
 
-console.log('have created ' + filename);
+});

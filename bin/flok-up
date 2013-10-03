@@ -8,10 +8,6 @@ var program = require('commander');
 // setup flok specific options on program and get back a flok instance
 var flok = require('./flok').my(program);
 
-flok.on('up', function (migration) {
-  //do something per migration?
-});
-
 // up migrations
 flok.up(null, function (err) {
   if (err) {

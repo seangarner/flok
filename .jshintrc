@@ -1,0 +1,26 @@
+{
+    "bitwise": true,
+    "curly": false,
+    "indent": 2,
+    "noarg": true,
+    "quotmark": "single",
+    "undef":  true,
+    "unused": true,
+    "strict": false,
+    "maxlen": 100,
+    "node": true,
+    "white": true,
+    "latedef": true,
+    "newcap": true,
+    "trailing": true,
+    "esnext": true,
+    "predef": [
+        "describe",         // Used by mocha
+        "it",               // Used by mocha
+        "before",           // Used by mocha
+        "beforeEach",       // Used by mocha
+        "after",            // Used by mocha
+        "afterEach",        // Used by mocha
+        "should"            // Used by mocha
+    ]
+}
