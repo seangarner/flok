@@ -60,7 +60,6 @@ describe('generator', function () {
         res.should.be.a('string');
         res.match(/foobar/g).should.have.lengthOf(2);
         res.match(/baz/g).should.have.lengthOf(2);
-        console.dir(gen);
         console.log();
         done();
       });

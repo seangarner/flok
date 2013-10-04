@@ -25,7 +25,7 @@ function touchLock(filename) {
   fs.writeFileSync(filename, process.pid + '');
 }
 
-function flokme (dir) {
+function flokme(dir) {
   var f = new Flok({
     migrationsDir: path.join(__dirname, dir),
     lockFile: lockFile()
@@ -101,33 +101,7 @@ describe('Flok', function () {
 
     describe('signature', function () {
       it('should return an md5sum of the migration file', function () {
-        migration.signature.should.equal('299a67458b0a882a18917893a08c4b68');
-      });
-    });
-
-    describe('Migration.generate', function () {
-      var filename;
-
-      it('should return write a new skeleton migration and return the path', function () {
-        filename = flokjs.Migration.generate('/tmp');
-        filename.should.be.ok;
-
-        var m = {};
-        (function () {
-          m = require(filename);
-        }).should.not.throw();
-
-        m.should.have.property('id');
-        m.should.have.property('title');
-        m.should.have.property('time');
-        m.should.have.property('up');
-        m.should.have.property('down');
-      });
-
-      after(function (done) {
-        fs.unlink(filename, function () {
-          done(); // ignore errors
-        });
+        migration.signature.should.equal('4adc48c79420899d89ebee842a5a0eb1');
       });
     });
 
@@ -194,9 +168,9 @@ describe('Flok', function () {
     });
 
     it('should not emit lock on error', function (done) {
-      unlockEmitted = 0;
+      var unlockEmitted = 0;
       touchLock(lockFile());
-      flok._lock(function (err) {
+      flok._lock(function () {
         process.nextTick(function () {
           unlockEmitted.should.equal(0);
           done();
