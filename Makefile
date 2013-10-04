@@ -1,8 +1,8 @@
 JSHINT = node ./node_modules/.bin/jshint
-MOCHA = node ./node_modules/.bin/mocha
+MOCHA = node ./node_modules/mocha/bin/mocha
 
 TESTS = test/*.js
-SRC = $(shell find bin lib -type f -name "*.js")
+SRC = $(shell find bin lib test -type f -name "*.js")
 
 REPORTER ?= spec
 
