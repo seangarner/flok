@@ -71,7 +71,7 @@ describe('Flok', function () {
   describe('loadMigrations', function () {
 
     it('should load migrations', function (done) {
-      flok.loadMigrations(function (err, migrations) {
+      flok._loadMigrations(function (err, migrations) {
         if (err) return done(err);
         migrations.should.be.ok;
         migrations.length.should.be.above(0);
@@ -101,7 +101,7 @@ describe('Flok', function () {
 
     describe('signature', function () {
       it('should return an md5sum of the migration file', function () {
-        migration.signature.should.equal('4adc48c79420899d89ebee842a5a0eb1');
+        migration.signature.should.equal('82a4f55e9274c8ff50dc21672f1eb201');
       });
     });
 
@@ -130,6 +130,19 @@ describe('Flok', function () {
       loadedMigrationStatus.should.be.instanceof(Array);
     });
 
+  });
+
+  describe('default sortMigrationsUp', function () {
+    it('should sort migrations so dependencies are satisfied first', function (done) {
+      flok.sortMigrationsUp(function () {
+        flok.migrations[0].time.should.equal(1);
+        flok.migrations[1].time.should.equal(4);
+        flok.migrations[2].time.should.equal(2);
+        flok.migrations[3].time.should.equal(3);
+        flok.migrations[4].time.should.equal(5);
+        done();
+      });
+    });
   });
 
   describe('default lock', function () {
@@ -250,6 +263,7 @@ describe('Flok', function () {
     it('should work', function (done) {
       var flok = flokme('migrations');
       global.__floklast = 1;
+      global.__flokfirst = 1;
       flok.down(null, function (err, migrations) {
         if (err) return done(err);
         global.__floklast.should.equal(0);
@@ -263,6 +277,7 @@ describe('Flok', function () {
               if (e4) return done(e4);
               flok.down(null, function (e5) {
                 if (e5) return done(e5);
+                global.__flokfirst.should.equal(0);
                 done();
               });
             });
