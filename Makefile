@@ -17,6 +17,7 @@ lint:
 	$(JSHINT) $(TESTS)
 
 test:
+	rm -Rf test/migrations/flokStatus/
 	$(MOCHA) --reporter $(REPORTER) $(TESTS)
 
 .PHONY: dev clean lint test
