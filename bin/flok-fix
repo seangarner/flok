@@ -30,6 +30,8 @@ function revert(mig, next) {
 }
 
 function wipe(mig, next) {
+  // clear migration status for this status
+  // does this require a new method on flok for the status store?
   next();
 }
 
@@ -83,7 +85,7 @@ var actions = {
     fn: function (mig, next) {
       // run process to view and call fixit with migration again
       child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
-        console.log('\n' + stdout + stderr + '\n');
+        console.log(stdout + stderr);
         fixit(mig, next);
       });
     }
@@ -98,9 +100,8 @@ var actions = {
 
 function fixit(mig, next) {
 
-  //TODO: display more information about problem
-  //      maybe show info could simply be another action which calls flok-show <id> ?
-  flok.log.info('fixing', mig.title);
+  console.log('migration [%s] is blocked because of %s', mig.title,
+                mig.isChanged ? 'a change' : 'an error');
 
   var prompt = [{
     type: 'list',
