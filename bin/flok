@@ -214,7 +214,8 @@ function main() {
     .command('up',          'run up migrations')
     .command('down',        'back out 1 migration at a time')
     .command('init',        'create a new migration using a generator')
-    .command('lock',        'override flok locking');
+    .command('lock',        'override flok locking')
+    .command('fix',         'repair blocked migrations');
 
   // load flok.opts
   if (!needHelp()) loadConfig(program);
