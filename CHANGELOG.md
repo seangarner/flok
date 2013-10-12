@@ -1,6 +1,12 @@
 flok changelog
 ==============
 
+0.4.1 (2013/10/12)
+------------------
+
+ - fix `flok show <arg>` where the argument is ignored unless specified twice
+ - fix `flok show <id>` when `<id>` has an uppercase letter again
+
 0.4.0 (2013/10/09)
 ------------------
 
