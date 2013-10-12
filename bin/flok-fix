@@ -4,32 +4,9 @@ var program = require('commander');
 var filter = require('mout/array/filter');
 var async = require('async');
 var inquirer = require('inquirer');
+var child_process = require('child_process');
 
 var flok = require('./flok').my(program, ['state', 'lock', 'middleware']);
-
-var changedPrompt = [{
-  type: 'list',
-  name: 'action',
-  message: 'Select desired action',
-  choices: [
-    'update signature in status',
-    'revert the change',
-    'nothing'
-  ],
-  filter: function (val) { return val.replace(/ .*/, ''); }
-}];
-
-var erroredPrompt = [{
-  type: 'list',
-  name: 'action',
-  message: 'Select desired action',
-  choices: [
-    'rollback the change',
-    'wipe status',
-    'nothing'
-  ],
-  filter: function (val) { return val.replace(/ .*/, ''); }
-}];
 
 function done(err) {
   if (err) {
@@ -40,6 +17,7 @@ function done(err) {
 }
 
 function update(mig, next) {
+  flok.log.info(mig, 'updating signature in status for [%s] to match current migration signature');
   mig.status.signature = mig.signature;
   flok._saveMigrationStatus(null, mig, next);
 }
@@ -56,12 +34,14 @@ function wipe(mig, next) {
 }
 
 var changedActions = [
+  'show migration information',
   'update signature in status',
   'revert the change',
   'nothing'
 ];
 
 var erroredActions = [
+  'show migration information',
   'rollback the change',
   'wipe status',
   'nothing'
@@ -70,13 +50,13 @@ var erroredActions = [
 var actions = {
 
   update: {
-    confirm: 'by updating the signature you will no longer be warned about this change.  Are ' +
+    confirm: 'By updating the signature you will no longer be warned about this change.  Are ' +
              'you sure you wish to ignore changes in this migration?',
     fn: update
   },
 
   revert: {
-    confirm: 'if the signature has changed then the method of reverting may have been changed ' +
+    confirm: 'If the signature has changed then the method of reverting may have been changed ' +
              'which means it may not be compatible with the version of the migration you ' +
              'previously ran.  The safest path is normally to restore the old migration, ' +
              'then revert, then install the new version again and migrate up normally.  Are you ' +
@@ -85,7 +65,7 @@ var actions = {
   },
 
   rollback: {
-    confirm: 'the down migration will be called to roll back the changes.  If this is not ' +
+    confirm: 'The down migration will be called to roll back the changes.  If this is not ' +
              'idempotent then it could cause further damage. Are you sure you wish to continue?',
     fn: revert
   },
@@ -96,6 +76,17 @@ var actions = {
              'has run and it is not idempotent then wiping status may be dangerous.  Are you sure' +
              'you wish to wipe this migrations status so it can be run again?',
     fn: wipe
+  },
+
+  show: {
+    confirm: null,
+    fn: function (mig, next) {
+      // run process to view and call fixit with migration again
+      child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
+        console.log('\n' + stdout + stderr + '\n');
+        fixit(mig, next);
+      });
+    }
   },
 
   nothing: {
@@ -126,10 +117,10 @@ function fixit(mig, next) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirmed',
-      message: action.comfirm,
+      message: action.confirm,
       default: false
     }], function (res) {
-      if (res.confirm) return action.fn(mig, next);
+      if (res.confirmed) return action.fn(mig, next);
         else next();
     });
 
