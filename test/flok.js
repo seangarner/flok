@@ -28,6 +28,8 @@ function touchLock(filename) {
 function flokme(dir) {
   var f = new Flok({
     migrationsDir: path.join(__dirname, dir),
+    builtInLock: true,
+    builtInStatus: true,
     lockFile: lockFile()
   });
   var logger = new flokjs.ConsoleLogger({
@@ -49,7 +51,9 @@ describe('Flok', function () {
   it('should construct', function () {
     Flok.should.be.instanceof(Function);
     flok = new Flok({
-      migrationsDir: path.join(__dirname, '/migrations')
+      migrationsDir: path.join(__dirname, '/migrations'),
+      builtInLock: true,
+      builtInStatus: true
     });
     flok.should.be.instanceof(Flok);
     flok.on('lock', function () {
