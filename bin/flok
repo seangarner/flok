@@ -169,6 +169,8 @@ function flokme(program) {
   // setup common options required to create a flok instance
   program
     .option('-m, --migrations <path>', 'path to migrations', path.resolve('migrations'))
+    .option('--no-builtInLock', 'never load the file based locking')
+    .option('--no-builtInStatus', 'never load status from files in migrations')
     .option('-l, --level <level>', 'log at trace, debug, info, warn, error, alert, fatal', 'info')
     .option('-v, --verbose', 'shortcut for `--level debug --log`');
 
@@ -177,6 +179,8 @@ function flokme(program) {
   // new flok instance with console logger
   var flok = new flokjs.Flok({
     migrationsDir: path.resolve(program.migrations),
+    builtInLock: program.builtInLock,
+    noBuiltInStatus: program.builtInStatus,
     lockFile: path.join(path.resolve(program.migrations), 'flok.lock')
   });
   var logger = new flokjs.ConsoleLogger({
