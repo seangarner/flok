@@ -6,6 +6,7 @@ next
 
  - added ability to ensure built-ins for lock and status are never loaded
  - fix date based part of generated migration file
+ - fix `flok init` when using the mongodb driver for state
 
 0.4.1 (2013/10/12)
 ------------------
