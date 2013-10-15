@@ -5,33 +5,117 @@ var filter = require('mout/array/filter');
 var async = require('async');
 var inquirer = require('inquirer');
 var child_process = require('child_process');
+var pluck = require('mout/array/pluck');
+var filter = require('mout/array/filter');
 
 var flok = require('./flok').my(program, ['state', 'lock', 'middleware']);
+
+/*
+flok.addFixFor('changed', function(mig, next) {});
+*/
+
 
 function done(err) {
   if (err) {
     flok.log.error(err, err.message);
     process.exit(1);
   }
-  process.exit(0);
+  flok.unlock(function (err) {
+    if (err) {
+      flok.log.error(err, err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+}
+
+function confirm(message, callback) {
+  inquirer.prompt([{
+    type: 'confirm',
+    name: 'confirmed',
+    default: false,
+    message: message
+  }], function (res) {
+    callback(res.confirmed);
+  });
 }
 
 function update(mig, next) {
-  flok.log.info(mig, 'updating signature in status for [%s] to match current migration signature');
-  mig.status.signature = mig.signature;
-  flok._saveMigrationStatus(null, mig, next);
+  var message = 'By updating the signature you will no longer be warned about this change.  Are ' +
+                'you sure you wish to ignore changes in this migration?';
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+
+    flok.log.info({oldSignature: mig.status.signature, currentSignature: mig.signature},
+                  'updating signature in status for [%s] to match current migration signature',
+                  mig.title);
+
+    mig.status.signature = mig.signature;
+
+    flok._saveMigrationStatus(null, mig, next);
+  });
+
 }
 
 function revert(mig, next) {
-// flok down only if it's already last migration?
-// flok down until we get to this migration?
-// flok down only if it wouldn't break dependencies
-  next();
+  var migs = flok.migrations;
+  var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
+  var many = migsToRevert.length > 1;
+
+  if (mig.isChanged) {
+    console.log('If the signature has changed then the method of reverting may have been changed ' +
+                'which means it may not be compatible with the version of the migration you ' +
+                'previously ran.  The safest path is normally to restore the old migration, ' +
+                'then revert, then install the new version again and migrate up normally.');
+  }
+
+  if (mig.isErrored) {
+    console.log('The down migration will be called to roll back the changes.  If this is not ' +
+                'idempotent then it could cause further damage.');
+  }
+
+  if (many) {
+    console.log('Migrations are rolled back in the order they were executed therefore you will ' +
+                'need to roll back the following migration(s) before being able to roll back the' +
+                'broken migration:');
+    var titles = pluck(pluck(migs, 'title'));
+    console.log(titles.join('\n'));
+  }
+
+  var message = 'Are you sure you wish to revert ' + (many ? 'these migrations' : 'this migration');
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+
+    flok._executeMigrations(migsToRevert, '_down', next);
+  });
 }
 
 function wipe(mig, next) {
-  // clear migration status for this status
-  // does this require a new method on flok for the status store?
+
+  var message = 'This is normally done after a temporal problem has been resolved (e.g. network ' +
+             'error) that caused the migration to not run at all.  If any part of the migration ' +
+             'has run and it is not idempotent then wiping status may be dangerous.  Are you ' +
+             'sure you wish to wipe this migrations status so it can be run again?';
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+    // clear all status for this migration
+    flok._clearMigrationStatus(mig, next);
+  });
+}
+
+function show(mig, next) {
+  // run process to view and call fixit with migration again
+  child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
+    console.log(stdout + stderr);
+    fixit(mig, next);
+  });
+}
+
+function nothing(mig, next) {
+  flok.log.info('no fix action was taken for %s', mig.title);
   next();
 }
 
@@ -44,7 +128,7 @@ var changedActions = [
 
 var erroredActions = [
   'show migration information',
-  'rollback the change',
+  'revert the change',
   'wipe status',
   'nothing'
 ];
@@ -52,48 +136,28 @@ var erroredActions = [
 var actions = {
 
   update: {
-    confirm: 'By updating the signature you will no longer be warned about this change.  Are ' +
-             'you sure you wish to ignore changes in this migration?',
+    confirm: null,
     fn: update
   },
 
   revert: {
-    confirm: 'If the signature has changed then the method of reverting may have been changed ' +
-             'which means it may not be compatible with the version of the migration you ' +
-             'previously ran.  The safest path is normally to restore the old migration, ' +
-             'then revert, then install the new version again and migrate up normally.  Are you ' +
-             'sure you wish to revert this migration?',
-    fn: revert
-  },
-
-  rollback: {
-    confirm: 'The down migration will be called to roll back the changes.  If this is not ' +
-             'idempotent then it could cause further damage. Are you sure you wish to continue?',
+    confirm: null,
     fn: revert
   },
 
   wipe: {
-    confirm: 'This is normally done after a temporal problem has been resolved (e.g. network ' +
-             'error) that caused the migration to not run at all.  If any part of the migration ' +
-             'has run and it is not idempotent then wiping status may be dangerous.  Are you sure' +
-             'you wish to wipe this migrations status so it can be run again?',
+    confirm: null,
     fn: wipe
   },
 
   show: {
     confirm: null,
-    fn: function (mig, next) {
-      // run process to view and call fixit with migration again
-      child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
-        console.log(stdout + stderr);
-        fixit(mig, next);
-      });
-    }
+    fn: show
   },
 
   nothing: {
     confirm: null,
-    fn: function (mig, next) { next(); }
+    fn: nothing
   }
 };
 
@@ -113,8 +177,8 @@ function fixit(mig, next) {
 
   inquirer.prompt(prompt, function (res) {
     var action = actions[res.action];
-    if (!action.confirm) return action.fn(mig, next);
 
+    if (!action.confirm) return action.fn(mig, next);
     inquirer.prompt([{
       type: 'confirm',
       name: 'confirmed',
@@ -152,13 +216,7 @@ flok.load(function (err) {
 
       flok.lock(function (lockErr) {
         if (lockErr) return done(lockErr);
-
-        async.eachSeries(borken, fixit, function (err) {
-          if (err) return done(err);
-
-          flok.unlock(done);
-        });
-
+        async.eachSeries(borken, fixit, done);
       });
       return;
     }
