@@ -5,6 +5,7 @@ next
 ----
 
  - added ability to ensure built-ins for lock and status are never loaded
+ - fix date based part of generated migration file
 
 0.4.1 (2013/10/12)
 ------------------
