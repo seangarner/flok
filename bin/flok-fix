@@ -7,14 +7,14 @@ var inquirer = require('inquirer');
 var child_process = require('child_process');
 var pluck = require('mout/array/pluck');
 var filter = require('mout/array/filter');
+var find = require('mout/array/find');
 
 var flok = require('./flok').my(program, ['state', 'lock', 'middleware']);
 
+
 /*
-flok.addFixFor('changed', function(mig, next) {});
-*/
-
-
+ * shortcut to exiting appropriately
+ */
 function done(err) {
   if (err) {
     flok.log.error(err, err.message);
@@ -29,6 +29,10 @@ function done(err) {
   });
 }
 
+
+/*
+ * shortcut to prompt for confirmation calls back a boolean
+ */
 function confirm(message, callback) {
   inquirer.prompt([{
     type: 'confirm',
@@ -40,7 +44,12 @@ function confirm(message, callback) {
   });
 }
 
-function update(mig, next) {
+
+/*
+ * fix to update signature in status to match the new one
+ */
+flok.addFixFor('changed', 'update signature in status', function update(mig, next) {
+
   var message = 'By updating the signature you will no longer be warned about this change.  Are ' +
                 'you sure you wish to ignore changes in this migration?';
 
@@ -55,11 +64,23 @@ function update(mig, next) {
 
     flok._saveMigrationStatus(null, mig, next);
   });
+});
 
-}
 
-function revert(mig, next) {
+/*
+ * fix to roll back migrations 1 by 1 until the bad migration has been rolled off
+ */
+flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig, next) {
   var migs = flok.migrations;
+
+
+
+// the correct modules (mongo) aren't loaded correctly
+// maybe need to consider moving down selection into flok.down then spawn like with info
+
+
+
+
   var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
   var many = migsToRevert.length > 1;
 
@@ -90,9 +111,13 @@ function revert(mig, next) {
 
     flok._executeMigrations(migsToRevert, '_down', next);
   });
-}
+});
 
-function wipe(mig, next) {
+
+/*
+ * fix to wipe the status making flok think that the migration was never run
+ */
+flok.addFixFor('errored', 'wipe status', function wipe(mig, next) {
 
   var message = 'This is normally done after a temporal problem has been resolved (e.g. network ' +
              'error) that caused the migration to not run at all.  If any part of the migration ' +
@@ -104,91 +129,56 @@ function wipe(mig, next) {
     // clear all status for this migration
     flok._clearMigrationStatus(mig, next);
   });
-}
+});
 
-function show(mig, next) {
+
+/*
+ * show migration information and prompt to fix again
+ */
+flok.addFixFor(['errored', 'changed'], 'show migration information', function show(mig, next) {
   // run process to view and call fixit with migration again
   child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
     console.log(stdout + stderr);
     fixit(mig, next);
   });
-}
+});
 
-function nothing(mig, next) {
+
+/*
+ * skip to the next broken migration
+ */
+flok.addFixFor(['errored', 'changed'], 'do nothing', function nothing(mig, next) {
   flok.log.info('no fix action was taken for %s', mig.title);
   next();
-}
+});
 
-var changedActions = [
-  'show migration information',
-  'update signature in status',
-  'revert the change',
-  'nothing'
-];
+// get all fixes setup on flok
+var changedActions = flok.fixesFor('changed');
+var changedActionTitles = pluck(changedActions, 'title');
+var erroredActions = flok.fixesFor('errored');
+var erroredActionTitles = pluck(erroredActions, 'title');
 
-var erroredActions = [
-  'show migration information',
-  'revert the change',
-  'wipe status',
-  'nothing'
-];
-
-var actions = {
-
-  update: {
-    confirm: null,
-    fn: update
-  },
-
-  revert: {
-    confirm: null,
-    fn: revert
-  },
-
-  wipe: {
-    confirm: null,
-    fn: wipe
-  },
-
-  show: {
-    confirm: null,
-    fn: show
-  },
-
-  nothing: {
-    confirm: null,
-    fn: nothing
-  }
-};
-
-
+// prompt the user with appropriate fixes for this migration and execute choise
 function fixit(mig, next) {
 
   console.log('migration [%s] is blocked because of %s', mig.title,
                 mig.isChanged ? 'a change' : 'an error');
 
+  var actions = mig.isChanged ? changedActions : erroredActions;
+  var actionTitles = mig.isChanged ? changedActionTitles : erroredActionTitles;
+
   var prompt = [{
     type: 'list',
     name: 'action',
     message: 'Select desired action',
-    choices: mig.isChanged ? changedActions : erroredActions,
-    filter: function (val) { return val.replace(/ .*/, ''); }
+    choices: actionTitles
   }];
 
   inquirer.prompt(prompt, function (res) {
-    var action = actions[res.action];
-
-    if (!action.confirm) return action.fn(mig, next);
-    inquirer.prompt([{
-      type: 'confirm',
-      name: 'confirmed',
-      message: action.confirm,
-      default: false
-    }], function (res) {
-      if (res.confirmed) return action.fn(mig, next);
-        else next();
+    var action = find(actions, function (val) {
+      if (val.title === res.action) return true;
     });
-
+    action(mig, next);
   });
 }
 
