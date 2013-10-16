@@ -6,7 +6,7 @@ var program = require('commander');
 //   .option('-n, --noop', 'show what would happen');
 
 // setup flok specific options on program and get back a flok instance
-var flok = require('./flok').my(program);
+var flok = require('./flok').my(program, ['state', 'lock', 'middleware']);
 
 // up migrations
 flok.up(null, function (err) {

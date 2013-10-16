@@ -29,7 +29,7 @@ program
 //TODO: sort options
 
 // setup flok specific options on program and get back a flok instance
-var flok = require('./flok').my(program);
+var flok = require('./flok').my(program, ['state']);
 
 function title(name) {
   return keyTitleMap[name] || properCase(unCamelCase(name.substr(name.indexOf('.') + 1)));

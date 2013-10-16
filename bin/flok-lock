@@ -9,7 +9,7 @@ program
   .option('-y, --yes', 'answer yes to all questions');
 
 // setup flok specific options on program and get back a flok instance
-var flok = require('./flok').my(program);
+var flok = require('./flok').my(program, ['lock']);
 
 async.auto({
 

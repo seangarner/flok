@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var program = require('commander');
 var guid = require('mout/random/guid');
-var flok = require('./flok').my(program);
+var flok = require('./flok').my(program, ['state']);
 
 // Check for existance of migrations dir and create if absent
 try {

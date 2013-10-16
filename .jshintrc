@@ -10,7 +10,7 @@
     "maxlen": 100,
     "node": true,
     "white": true,
-    "latedef": true,
+    "latedef": "nofunc",
     "newcap": true,
     "trailing": true,
     "esnext": true,

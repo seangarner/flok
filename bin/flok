@@ -2,10 +2,21 @@
 var colors = require('colors');
 var path = require('path');
 var fs = require('fs');
+var flatten = require('mout/array/flatten');
+var invoke = require('mout/array/invoke');
+var filter = require('mout/array/filter');
+
 
 // only print colours on a real terminal
 if (!process.stdout.isTTY) colors.mode = 'none';
 
+// invoke for array of objects that might not have method
+function safeInvoke(arr, method) {
+  var args = Array.prototype.slice.call(arguments, 2);
+  args.unshift(method);
+  args.unshift(filter(arr, method));
+  invoke.apply(null, args);
+}
 
 // get an option from argv or config before program.parse
 function preParseOption(l, s, argv) {
@@ -36,22 +47,6 @@ function preParseOption(l, s, argv) {
 }
 
 
-// // remove an option from argv
-// function removeOption(opts) {
-//   for (var i = 0; i < opts.length; i++) {
-//     // look for the option in argv covering when it's `--opt=foobar`
-//     var i = process.argv.indexOf(l) || process.argv.indexOf(l + '=');
-//     if (i === -1) continue;
-
-//     process.argv.splice(i, 1);
-
-//     // see if there's a value after that needs removing also
-//     if (process.argv[i][0] !== '-') process.argv.splice(i, 1);
-//   };
-
-// }
-
-
 // read options from flok.opts (thanks mocha!)
 var _config = [];
 var _configLoaded = false;
@@ -59,8 +54,6 @@ function _loadConfig(noSplit) {
   if (_configLoaded) return noSplit ? _config : _config.split(/\s+/);
 
   // get config location
-  // var name = path.basename(process.argv[1]);
-  // var file = process.env.FLOKOPTS || path.resolve(name + '.opts');
   var file = process.env.FLOKOPTS || path.resolve('flok.opts');
 
   // load config file
@@ -101,15 +94,23 @@ function needHelp() {
   return false;
 }
 
+function safeRequire(file) {
+  var m;
+  try {
+    m = require(file);
+  } catch (e) {
+    console.error('error loading [%s]: %s', file, e.message);
+    process.exit(1);
+  }
+  return m;
+}
+
 
 /**
  * Load modules from --modules
  * To support 3rd party modules that can hook onto each bin and set new commands and options
  */
-function loadModules(program) {
-
-  var name = path.basename(process.argv[1]);
-
+function loadModules(program, requirements) {
   // add custom output for --modules to help because we can't register --modules as an option
   // since we need to use it before we parse so modules can add options & commands to program
   program.on('--help', function () {
@@ -122,41 +123,44 @@ function loadModules(program) {
     console.log('     with the modules enabled to get information on how to configure them.');
     console.log('');
   });
-  program.option('-m, --modules <name or absolte path>',
+  program.option('-m, --modules <name|absolute_path>',
                  'comma separated list of modules to extend flok with');
 
   // load from cli arg first then if not present from flok.opts
-  var mods = preParseOption('-m', '--modules', process.argv);
-  if (!mods) mods = preParseOption('-m', '--modules', _loadConfig());
-  if (!mods) return [];
+  var modNames = preParseOption('-m', '--modules', process.argv);
+  if (!modNames) modNames = preParseOption('-m', '--modules', _loadConfig());
+  if (!modNames) return [];
 
-  mods = mods.split(',');
+  modNames = modNames.split(',');
 
   // load each module
-  var onParsedCallbacks = [];
-  mods.forEach(function (file) {
-    var m;
-    try {
-      m = require(file);
-    } catch (e) {
-      console.error('error loading [%s]: %s', file, e.message);
-      process.exit(1);
-    }
+  var mods = modNames.map(safeRequire);
 
-    if (m[name] instanceof Function) {
-      var cb = m[name](program);
-      if (cb instanceof Function) onParsedCallbacks.push(cb);
-    }
-  });
+  // load options for each module
+  safeInvoke(mods, 'options', program, requirements || []);
 
-  return onParsedCallbacks;
+  // extend our commander program with ability to define requirements and have them loaded
+  program.Command.prototype.requirement = function requirement() {
+    var cmdRequirements = flatten(Array.prototype.slice.call(arguments));
+    var command = this;
+
+    // load other module options into this command
+    if (cmdRequirements.length > 0) safeInvoke(mods, 'options', command, cmdRequirements);
+
+    return this;
+  };
+
+  // load module commands
+  safeInvoke(mods, 'commands', program);
+
+  return mods;
 }
 
 
 /**
  * keep other bin files dry by having options and flok creation reusable
  */
-function flokme(program) {
+function flokme(program, requirements) {
   var flokjs = require('..');
 
   // load args from flok.opts
@@ -164,7 +168,7 @@ function flokme(program) {
 
   // pre-parse argv for --modules, load them and call `onCli` so they can register options and
   // commands and send back a function to be executed when program is parsed
-  var onParsedCallbacks = loadModules(program);
+  var mods = loadModules(program, requirements);
 
   // setup common options required to create a flok instance
   program
@@ -189,9 +193,7 @@ function flokme(program) {
   flok.extend(logger);
 
   // send flok to each module so it can extend it
-  onParsedCallbacks.forEach(function (cb) {
-    cb(flok);
-  });
+  safeInvoke(mods, 'onParse', program, flok);
 
   return flok;
 }
@@ -213,10 +215,6 @@ function main() {
     .command('down',        'back out 1 migration at a time')
     .command('init',        'create a new migration using a generator')
     .command('lock',        'override flok locking');
-
-  //TODO: .command('reset', 'reset a single migrations state') should require confirmation
-  //TODO: .command('bootstrap', 'setup this project (i.e PWD) for migrations')
-  //TODO: .command('import', 'import already done migrations into state store')
 
   // load flok.opts
   if (!needHelp()) loadConfig(program);
