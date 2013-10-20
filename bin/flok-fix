@@ -71,7 +71,7 @@ flok.addFixFor('changed', 'update signature in status', function update(mig, nex
  * fix to roll back migrations 1 by 1 until the bad migration has been rolled off
  */
 flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig, next) {
-  var migs = flok.migrations;
+  var migs = flok.migrations.slice().reverse();
 
   var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
   var many = migsToRevert.length > 1;
@@ -92,7 +92,7 @@ flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig,
     console.log('Migrations are rolled back in the order they were executed therefore you will ' +
                 'need to roll back the following migration(s) before being able to roll back the' +
                 'broken migration:');
-    var titles = pluck(pluck(migs, 'title'));
+    var titles = pluck(migs, 'title');
     console.log(titles.join('\n'));
   }
 
