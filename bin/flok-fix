@@ -73,14 +73,6 @@ flok.addFixFor('changed', 'update signature in status', function update(mig, nex
 flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig, next) {
   var migs = flok.migrations;
 
-
-
-// the correct modules (mongo) aren't loaded correctly
-// maybe need to consider moving down selection into flok.down then spawn like with info
-
-
-
-
   var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
   var many = migsToRevert.length > 1;
 
