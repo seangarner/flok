@@ -74,6 +74,7 @@ flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig,
   var migs = flok.migrations.slice().reverse();
 
   var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
+  if (migsToRevert.indexOf(mig) === -1) migsToRevert.push(mig);
   var many = migsToRevert.length > 1;
 
   if (mig.isChanged) {
@@ -101,7 +102,12 @@ flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig,
   confirm(message, function (confirmed) {
     if (!confirmed) return done();
 
-    flok._executeMigrations(migsToRevert, '_down', next);
+    flok._executeMigrations(migsToRevert, '_down', function (err) {
+      if (err) return next(err);
+
+      // successful so will need to clear status of this migration
+      flok._clearMigrationStatus(mig, next);
+    });
   });
 });
 
