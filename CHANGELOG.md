@@ -1,8 +1,8 @@
 flok changelog
 ==============
 
-next
-----
+0.5.0 (2013/10/22)
+------------------
 
  - new `flok fix` command interactively guides user through fixing broken migrations 
  - added ability to ensure built-ins for lock and status are never loaded
