@@ -1,0 +1,223 @@
+#!/usr/bin/env node
+
+var program = require('commander');
+var filter = require('mout/array/filter');
+var async = require('async');
+var inquirer = require('inquirer');
+var child_process = require('child_process');
+var pluck = require('mout/array/pluck');
+var filter = require('mout/array/filter');
+var find = require('mout/array/find');
+
+var flok = require('./flok').my(program, ['state', 'lock', 'middleware']);
+
+
+/*
+ * shortcut to exiting appropriately
+ */
+function done(err) {
+  if (err) {
+    flok.log.error(err, err.message);
+    process.exit(1);
+  }
+  flok.unlock(function (err) {
+    if (err) {
+      flok.log.error(err, err.message);
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+}
+
+
+/*
+ * shortcut to prompt for confirmation calls back a boolean
+ */
+function confirm(message, callback) {
+  inquirer.prompt([{
+    type: 'confirm',
+    name: 'confirmed',
+    default: false,
+    message: message
+  }], function (res) {
+    callback(res.confirmed);
+  });
+}
+
+
+/*
+ * fix to update signature in status to match the new one
+ */
+flok.addFixFor('changed', 'update signature in status', function update(mig, next) {
+
+  var message = 'By updating the signature you will no longer be warned about this change.  Are ' +
+                'you sure you wish to ignore changes in this migration?';
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+
+    flok.log.info({oldSignature: mig.status.signature, currentSignature: mig.signature},
+                  'updating signature in status for [%s] to match current migration signature',
+                  mig.title);
+
+    mig.status.signature = mig.signature;
+
+    flok._saveMigrationStatus(null, mig, next);
+  });
+});
+
+
+/*
+ * fix to roll back migrations 1 by 1 until the bad migration has been rolled off
+ */
+flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig, next) {
+  var migs = flok.migrations.slice().reverse();
+
+  var migsToRevert = filter(migs.slice(migs.indexOf(mig)), { state: 'done' });
+  if (migsToRevert.indexOf(mig) === -1) migsToRevert.push(mig);
+  var many = migsToRevert.length > 1;
+
+  if (mig.isChanged) {
+    console.log('If the signature has changed then the method of reverting may have been changed ' +
+                'which means it may not be compatible with the version of the migration you ' +
+                'previously ran.  The safest path is normally to restore the old migration, ' +
+                'then revert, then install the new version again and migrate up normally.');
+  }
+
+  if (mig.isErrored) {
+    console.log('The down migration will be called to roll back the changes.  If this is not ' +
+                'idempotent then it could cause further damage.');
+  }
+
+  if (many) {
+    console.log('Migrations are rolled back in the order they were executed therefore you will ' +
+                'need to roll back the following migration(s) before being able to roll back the' +
+                'broken migration:');
+    var titles = pluck(migs, 'title');
+    console.log(titles.join('\n'));
+  }
+
+  var message = 'Are you sure you wish to revert ' + (many ? 'these migrations' : 'this migration');
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+
+    flok._executeMigrations(migsToRevert, '_down', function (err) {
+      if (err) return next(err);
+
+      // successful so will need to clear status of this migration
+      flok._clearMigrationStatus(mig, next);
+    });
+  });
+});
+
+
+/*
+ * fix to wipe the status making flok think that the migration was never run
+ */
+flok.addFixFor('errored', 'wipe status', function wipe(mig, next) {
+
+  var message = 'This is normally done after a temporal problem has been resolved (e.g. network ' +
+             'error) that caused the migration to not run at all.  If any part of the migration ' +
+             'has run and it is not idempotent then wiping status may be dangerous.  Are you ' +
+             'sure you wish to wipe this migrations status so it can be run again?';
+
+  confirm(message, function (confirmed) {
+    if (!confirmed) return done();
+    // clear all status for this migration
+    flok._clearMigrationStatus(mig, next);
+  });
+});
+
+
+/*
+ * show migration information and prompt to fix again
+ */
+flok.addFixFor(['errored', 'changed'], 'show migration information', function show(mig, next) {
+  // run process to view and call fixit with migration again
+  child_process.execFile(__dirname + '/flok-show', [mig.id], function (err, stdout, stderr) {
+    console.log(stdout + stderr);
+    fixit(mig, next);
+  });
+});
+
+
+/*
+ * skip to the next broken migration
+ */
+flok.addFixFor(['errored', 'changed'], 'do nothing', function nothing(mig, next) {
+  flok.log.info('no fix action was taken for %s', mig.title);
+  next();
+});
+
+// get all fixes setup on flok
+var changedActions = flok.fixesFor('changed');
+var changedActionTitles = pluck(changedActions, 'title');
+var erroredActions = flok.fixesFor('errored');
+var erroredActionTitles = pluck(erroredActions, 'title');
+
+// prompt the user with appropriate fixes for this migration and execute choise
+function fixit(mig, next) {
+
+  console.log('migration [%s] is blocked because of %s', mig.title,
+                mig.isChanged ? 'a change' : 'an error');
+
+  var actions = mig.isChanged ? changedActions : erroredActions;
+  var actionTitles = mig.isChanged ? changedActionTitles : erroredActionTitles;
+
+  var prompt = [{
+    type: 'list',
+    name: 'action',
+    message: 'Select desired action',
+    choices: actionTitles
+  }];
+
+  inquirer.prompt(prompt, function (res) {
+    var action = find(actions, function (val) {
+      if (val.title === res.action) return true;
+    });
+    action(mig, next);
+  });
+}
+
+
+// Load migrations
+flok.load(function (err) {
+  if (err) done(err);
+
+  flok.sortMigrationsDown(function (err) {
+    if (err) done(err);
+
+    // if migration in arg then check that 1 migration
+    var migId = program.args.pop();
+    var borken = migId ?
+      filter(flok.migrations, {id: migId}) :
+      filter(flok.migrations, 'isProblem');
+
+    if (borken.length === 1 && migId && !borken[0].isProblem) {
+      flok.log.error(borken[0], 'specified migration is not broken');
+      process.exit(1);
+    }
+
+    // fix em!
+    if (borken.length > 0) {
+
+      flok.lock(function (lockErr) {
+        if (lockErr) return done(lockErr);
+        async.eachSeries(borken, fixit, done);
+      });
+      return;
+    }
+
+    // nothing to fix if we're here...
+
+    if (migId) {
+      flok.log.error('unknown migration for fix: ' + migId);
+      process.exit(1);
+    }
+
+    flok.log.info('you have no blocked migrations!');
+    process.exit(0);
+
+  });
+});

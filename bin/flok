@@ -183,14 +183,16 @@ function flokme(program, requirements) {
   // new flok instance with console logger
   var flok = new flokjs.Flok({
     migrationsDir: path.resolve(program.migrations),
-    builtInLock: program.builtInLock,
-    noBuiltInStatus: program.builtInStatus,
     lockFile: path.join(path.resolve(program.migrations), 'flok.lock')
   });
   var logger = new flokjs.ConsoleLogger({
     level: program.verbose ? 'debug' : program.level
   });
   flok.extend(logger);
+
+  // load flok shipped basic lock and status plugins
+  if (program.builtInLock === true) flok.extend(require('../lib/lock-file'));
+  if (program.builtInStatus === true) flok.extend(require('../lib/status-file'));
 
   // send flok to each module so it can extend it
   safeInvoke(mods, 'onParse', program, flok);
@@ -214,7 +216,8 @@ function main() {
     .command('up',          'run up migrations')
     .command('down',        'back out 1 migration at a time')
     .command('init',        'create a new migration using a generator')
-    .command('lock',        'override flok locking');
+    .command('lock',        'override flok locking')
+    .command('fix',         'repair blocked migrations');
 
   // load flok.opts
   if (!needHelp()) loadConfig(program);

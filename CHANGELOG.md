@@ -4,6 +4,7 @@ flok changelog
 next
 ----
 
+ - new `flok fix` command interactively guides user through fixing broken migrations 
  - added ability to ensure built-ins for lock and status are never loaded
  - fix date based part of generated migration file
  - fix `flok init` when using the mongodb driver for state

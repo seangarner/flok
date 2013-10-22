@@ -20,16 +20,10 @@ function removeLock() {
   fs.unlinkSync(flok.lockFile);
 }
 
-function touchLock(filename) {
-  flok.lockFile = filename;
-  fs.writeFileSync(filename, process.pid + '');
-}
-
 function flokme(dir) {
-  var f = new Flok({
+  var flokjs = require('../lib/flok.js');
+  var f = new flokjs.Flok({
     migrationsDir: path.join(__dirname, dir),
-    builtInLock: true,
-    builtInStatus: true,
     lockFile: lockFile()
   });
   var logger = new flokjs.ConsoleLogger({
@@ -37,8 +31,13 @@ function flokme(dir) {
     printObjects: PRINTOBJECTS
   });
   f.extend(logger);
+
+  f.extend(require('../lib/lock-file'));
+  f.extend(require('../lib/status-file'));
+
   return f;
 }
+module.exports = flokme;
 
 
 describe('Flok', function () {
@@ -85,56 +84,6 @@ describe('Flok', function () {
 
   });
 
-  describe('Migration', function () {
-    var migration;
-    before(function () {
-      migration = new flokjs.Migration(__dirname + '/migrations/4_basic.js', flok.log);
-    });
-
-    describe('construction', function () {
-      it('should mix in all properties exported from the migration file', function () {
-        var file = require(__dirname + '/migrations/4_basic.js');
-        migration.id.should.equal(file.id);
-        migration.title.should.equal(file.title);
-        migration.time.should.equal(file.time);
-        migration.up.should.equal(file.up);
-        migration.down.should.equal(file.down);
-        migration.custom_property.should.equal(file.custom_property);
-      });
-    });
-
-    describe('signature', function () {
-      it('should return an md5sum of the migration file', function () {
-        migration.signature.should.equal('82a4f55e9274c8ff50dc21672f1eb201');
-      });
-    });
-
-  });
-
-  describe('loadMigrationsStatus', function () {
-
-    var loadMigrationsStatusEmitted = 0;
-    var loadedMigrationStatus = 'foobar';
-    before(function () {
-      flok.on('loadMigrationsStatus', function (migrations) {
-        loadMigrationsStatusEmitted++;
-        loadedMigrationStatus = migrations;
-      });
-    });
-
-    it('should load status', function (done) {
-      flok._loadMigrationsStatus(function (err) {
-        if (err) return done(err);
-        done();
-      });
-    });
-
-    it('should emit loadMigrationsStatus', function () {
-      loadMigrationsStatusEmitted.should.equal(1);
-      loadedMigrationStatus.should.be.instanceof(Array);
-    });
-
-  });
 
   describe('default sortMigrationsUp', function () {
     it('should sort migrations so dependencies are satisfied first', function (done) {
@@ -149,102 +98,6 @@ describe('Flok', function () {
     });
   });
 
-  describe('default lock', function () {
-
-    var lockEmitted;
-    before(function () {
-      flok.on('lock', function () {
-        lockEmitted++;
-      });
-    });
-
-    it('should create a lockfile', function (done) {
-      flok.lockFile = lockFile();
-      flok._lock(done);
-    });
-
-    it('should throw an error when the lockfile exists already', function (done) {
-      touchLock(lockFile());
-      flok._lock(function (err) {
-        err.should.be.instanceof(Error);
-        err.message.should.include('lock already exists');
-        done();
-        removeLock();
-      });
-    });
-
-    it('should emit lock when successful', function (done) {
-      lockEmitted = 0;
-      flok.lockFile = lockFile();
-      flok._lock(function () {
-        process.nextTick(function () {
-          lockEmitted.should.equal(1);
-          done();
-        });
-      });
-    });
-
-    it('should not emit lock on error', function (done) {
-      var unlockEmitted = 0;
-      touchLock(lockFile());
-      flok._lock(function () {
-        process.nextTick(function () {
-          unlockEmitted.should.equal(0);
-          done();
-          removeLock();
-        });
-      });
-    });
-
-  });
-
-  describe('default unlock', function () {
-
-    var unlockEmitted;
-    before(function () {
-      flok.on('unlock', function () {
-        unlockEmitted++;
-      });
-    });
-
-    it('should remove a lockfile', function (done) {
-      touchLock(lockFile());
-      flok._unlock(done);
-    });
-
-    it('should throw an error when the lockfile does not exist', function (done) {
-      flok.lockFile = lockFile();
-      flok._unlock(function (err) {
-        err.should.be.instanceof(Error);
-        err.message.should.include('lockfile does not exist to be removed');
-        done();
-      });
-    });
-
-    it('should emit unlock when successful', function (done) {
-      unlockEmitted = 0;
-      touchLock(lockFile());
-      flok._unlock(function (err) {
-        if (err) return done(err);
-        process.nextTick(function () {
-          unlockEmitted.should.equal(1);
-          done();
-        });
-      });
-    });
-
-    it('should not emit unlock on error', function (done) {
-      unlockEmitted = 0;
-      flok.lockFile = lockFile();
-      flok._unlock(function () {
-        process.nextTick(function () {
-          unlockEmitted.should.equal(0);
-          done();
-        });
-      });
-    });
-
-  });
 
   describe('up', function () {
 
