@@ -5,7 +5,7 @@ var fs = require('fs');
 var flatten = require('mout/array/flatten');
 var invoke = require('mout/array/invoke');
 var filter = require('mout/array/filter');
-
+var some = require('mout/array/some');
 
 // only print colours on a real terminal
 if (!process.stdout.isTTY) colors.mode = 'none';
@@ -70,6 +70,9 @@ function _loadConfig(noSplit) {
 // load flok.opts into argv ()
 function loadConfig(program) {
   var opts = _loadConfig('no_split').split('\n');
+
+  // splitting on '\n' when there are no args will result in an empty string in the array
+  if (opts[0] === '') opts.shift();
 
   // only load options which aren't already present and add them to the end of the argv
   var opt;
@@ -202,7 +205,6 @@ function flokme(program, requirements) {
 
 
 function main() {
-
   // fix executing subcommands when being run via a symlink
   var desymlinkified = path.join(__dirname, path.basename(process.argv[1]));
   process.argv[1] = desymlinkified;
@@ -221,7 +223,6 @@ function main() {
 
   // load flok.opts
   if (!needHelp()) loadConfig(program);
-
   // load --modules
   loadModules(program);
 
@@ -235,6 +236,12 @@ function main() {
     program.runningCommand.on('exit', function (code) {
       process.exit(code);
     });
+  } else {
+    // we're not running a command, check we were given a valid command
+    if (!some(program.commands, { _name: program.args[0] })) {
+      console.error('unrecognised command:', program.args.join(' '), '\nTry --help');
+    }
+
   }
 
 }

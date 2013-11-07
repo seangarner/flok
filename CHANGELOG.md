@@ -4,6 +4,7 @@ flok changelog
 NEXT (?????????)
 ------------------
 
+ - fix #9 exit with error when run with unrecognised command
  - user documentation (woot!)
  - fix bug when `flok down` where running when there are no suitable migrations results in an error
  - fix bug with `flok show` where filters wasn't working
