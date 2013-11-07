@@ -1,6 +1,13 @@
 flok changelog
 ==============
 
+NEXT (?????????)
+------------------
+
+ - fix bug when `flok down` where running when there are no suitable migrations results in an error
+ - fix bug with `flok show` where filters wasn't working
+ - add tests for binary files using [nixt (https://github.com/vesln/nixt)](https://github.com/vesln/nixt)
+
 0.5.0 (2013/10/22)
 ------------------
 

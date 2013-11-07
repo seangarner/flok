@@ -171,7 +171,7 @@ function changedMigrations() {
 }
 
 // what are we viewing
-var what = program.args.pop() || 'all';
+var what = program.args.shift() || 'all';
 
 // load migrations then display
 flok.load(function (err) {

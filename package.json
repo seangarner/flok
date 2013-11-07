@@ -26,7 +26,8 @@
   "devDependencies": {
     "mocha": "1.x",
     "should": "1.x",
-    "jshint": "2.x"
+    "jshint": "2.x",
+    "nixt": ">=0.0.2 <1.0"
   },
   "engines": {
     "node": ">=0.8"
