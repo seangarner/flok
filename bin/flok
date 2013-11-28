@@ -108,12 +108,20 @@ function safeRequire(file) {
   return m;
 }
 
-
 /**
  * Load modules from --modules
  * To support 3rd party modules that can hook onto each bin and set new commands and options
  */
 function loadModules(program, requirements) {
+  if (!requirements) requirements = [];
+
+  // decorate the requirements array with a contains function
+  Object.defineProperty(requirements, 'contains', {
+    value: function contains(something) {
+      return Boolean(this.indexOf(something) > -1);
+    }
+  });
+
   // add custom output for --modules to help because we can't register --modules as an option
   // since we need to use it before we parse so modules can add options & commands to program
   program.on('--help', function () {
