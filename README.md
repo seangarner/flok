@@ -272,3 +272,6 @@ flok.up(function(err) {
 ```
 
 There are other public methods on flok, which can be called, but aren't yet covered in the documentation.  Check the source for details.
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/seangarner/flok/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
