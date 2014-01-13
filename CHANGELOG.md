@@ -1,11 +1,11 @@
 flok changelog
 ==============
 
-NEXT (?????????)
+0.5.1 (2014/01/13)
 ------------------
 
  - fix #9 exit with error when run with unrecognised command
- - user documentation (woot!)
+ - user documentation (plugin docs still pending)
  - fix bug when `flok down` where running when there are no suitable migrations results in an error
  - fix bug with `flok show` where filters wasn't working
  - tests for bin files using [nixt (https://github.com/vesln/nixt)](https://github.com/vesln/nixt)
