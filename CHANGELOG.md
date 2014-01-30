@@ -1,6 +1,11 @@
 flok changelog
 ==============
 
+0.5.2 (2014/01/30)
+------------------
+
+- stop using findAndRemove mongo method during unlock which was leading to mongod locking up
+
 0.5.1 (2014/01/13)
 ------------------
 
