@@ -6,6 +6,7 @@ NEXT
 
  - generator documentation
  - plugin documentation
+ - when logging errors or above use `stderr` instead of `stdout`
 
 0.5.2 (2014/01/30)
 ------------------
