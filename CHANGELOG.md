@@ -1,6 +1,12 @@
 flok changelog
 ==============
 
+NEXT
+------------------
+
+ - generator documentation
+ - plugin documentation
+
 0.5.2 (2014/01/30)
 ------------------
 
