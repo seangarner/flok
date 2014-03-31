@@ -2,6 +2,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var util = require('util');
 var program = require('commander');
 var guid = require('mout/random/guid');
 var flok = require('./flok').my(program, ['state']);
@@ -34,7 +35,9 @@ flok._loadMigrations(function (err) {
       choices: flok.migrations.map(function (v) { return v.title + '  <' + v.id + '>'; })
     }], function (res) {
       var deps = res.dependencies.map(function (v) {
-        return '  \'' + v.match(/  <(.*)>/, '').pop() + '\'';
+        var id = v.match(/  <(.*)>/, '').pop();
+        var title = v.match(/([^<]*)*  <.*>/).pop();
+        return util.format('  \'%s\'  /* %s */', id, title);
       });
       done(null, deps.join(',\n'));
     });
