@@ -4,6 +4,8 @@ flok changelog
 NEXT
 ------------------
 
+ - `flok init` dependencies include description as a comment in the generated migration
+ - fix mongodb generator from inserting invalid js
  - generator documentation
  - plugin documentation
  - when logging errors or above use `stderr` instead of `stdout`
