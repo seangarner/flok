@@ -1,10 +1,8 @@
-flok
-====
+# flok
 
 Extendible migration tool written in javascript which can be used standalone or within a node project (e.g. a self updating express or restify application).  Not limited to, but first focus is database migration.
 
-Features
---------
+## Features
 * Pluggable (`npm find flok`)
 * Programmatic migrations
 * Custom logging available within migrations
@@ -14,19 +12,16 @@ Features
 * Use standalone, or call from within a node server
 
 
-Further Information
--------------------
+## Further Information
 Check the `/docs` directory for further documentation relevant for plugin authors and users with advanced requirements.
 
-Installation
-------------
+## Installation
 ```bash
 $ sudo npm install -g flok
 ```
 
 
-Quick Start
------------
+## Quick Start
 Change directory to the source of your project, then generate your first migration.
 ```bash
 $ flok init
@@ -115,8 +110,7 @@ $ npm find flok
 See below for more user documentation, but advanced topics such as plugin development and extending the template generator can be found in the `docs` directory.
 
 
-flok.opts
----------
+## flok.opts
 Each flok command is configured using cli switches.  But you can save switches in a `flok.opts` file so they are loaded every time flok is run.  Command line switches will take precedence.  e.g. to load `flok-mongodb` every time
 and to use it for locking and state add this to `flok.opts`.
 
@@ -141,8 +135,7 @@ In production you can write a `flok.opts` file into `/etc` and set the `FLOKOPTS
 Now whenever you run flok it will pick up the switches in `/etc/my_flok.
 
 
-flok cli
---------
+## flok cli
 In a similar style to `git` or `svn` all flok commands are accessed through the primary `flok` program, including those supplied by plugins.
 
 ### `flok show`
@@ -164,27 +157,23 @@ It can also display all the known information of a migration by specifying an ID
 ```bash
 $ flok show ABC-1066
 
-Add active property
-===================
+# Add active property
 State: blocked
 ID: ABC-1066
 Created: 2013-09-12 12:53:01 UTC
 Signature: 1e2cfd84df408d830980e97d4585bbd5
 Filename: /usr/local/my_app/migrations/20130912-1353-add_active_property.js
 
-Status
-------
+## Status
 Method: up
 Run Signature: 1e2cfd84df408d830980e97d4585bbd5
 Run Time: Tue Oct 29 2013 19:03:38 GMT+0000 (GMT)
 
-Error
------
+## Error
 Message: benign  example
 name: Error
 
-Error Stack
------------
+## Error Stack
 Error: benign example
     at Migration.up (/usr/local/my_app/migrations/20130912-1353-add_active_property.js:81:9)
     at Migration.up [as _up] (/flok/lib/migration.js:38:7)
@@ -248,8 +237,7 @@ migration [Add active property] is blocked because of an error
 ```
 
 
-Flok as a Module
-----------------
+## Flok as a Module
 Flok can be used as a module to ensure that migrations are up to date as a node application is started.  If any migrations are blocked the app could be programmed to exit without starting, ensuring data integrity.
 
 ```javascript
