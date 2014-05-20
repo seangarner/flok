@@ -115,7 +115,7 @@ flok.addFixFor(['changed', 'errored'], 'revert the change', function revert(mig,
 /*
  * fix to wipe the status making flok think that the migration was never run
  */
-flok.addFixFor('errored', 'wipe status', function wipe(mig, next) {
+flok.addFixFor(['changed', 'errored'], 'wipe status', function wipe(mig, next) {
 
   var message = 'This is normally done after a temporal problem has been resolved (e.g. network ' +
              'error) that caused the migration to not run at all.  If any part of the migration ' +
