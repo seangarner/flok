@@ -2,6 +2,7 @@
 
 ## NEXT
 
+ - `flok fix` now offers wipe status option when a migration has changed
  - `flok init` dependencies include description as a comment in the generated migration
  - fix mongodb generator from inserting invalid js
  - generator documentation
@@ -23,7 +24,7 @@
 
 ## 0.5.0 (2013/10/22)
 
- - new `flok fix` command interactively guides user through fixing broken migrations 
+ - new `flok fix` command interactively guides user through fixing broken migrations
  - added ability to ensure built-ins for lock and status are never loaded
  - fix date based part of generated migration file
  - fix `flok init` when using the mongodb driver for state
@@ -38,7 +39,7 @@
 ## 0.4.0 (2013/10/09)
 
  - migrations can define other migrations as dependencies
- - `make test` clears migration status of `test/migrations` before running mocha 
+ - `make test` clears migration status of `test/migrations` before running mocha
 
 ## 0.3.0 (2013/10/02)
 
