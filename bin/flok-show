@@ -243,7 +243,7 @@ flok.load(function (err) {
   migrations.forEach(function (m) {
     var r = rowOf(m, columns[what]);
     for (var i = 0; i < r.length; i++) {
-      widest[i] = Math.max(r[i].length, widest[i] || 0);
+      widest[i] = Math.max(r[i].length + 2, widest[i] || 0);
     }
     rows.push(r);
   });

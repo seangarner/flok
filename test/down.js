@@ -93,7 +93,7 @@ describe('down', function () {
         .before(lock)
         .run('')
         .after(unlock)
-        .stderr('ERROR migrating down: lock already exists')
+        .stderr(/ERROR migrating down: lock already exists/)
         .end(done);
     });
 
@@ -114,7 +114,7 @@ describe('down', function () {
     it('should write a message to stderr', function (done) {
       flok('show')
         .run('')
-        .stderr(/ERROR migrating down: found changed migrations/)
+        .stderr(/ERROR migrating down/)
         .after(function () {
           try { fs.unlinkSync(path.join(TEST, 'show', 'flok.lock')); } catch (e) {}
         })

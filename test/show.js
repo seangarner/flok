@@ -23,7 +23,7 @@ function itShouldDisplay(filter, columns) {
       .run(show + filter)
       .code(0)
       .expect(function (res) {
-        var headers = res.stdout.split('\n').slice(0, 2).join();
+        var headers = res.stdout.split('\n')[1];
         columns.forEach(function (col) {
           headers.should.include(col);
         });
@@ -82,7 +82,7 @@ describe('show', function () {
         .end(done);
     });
 
-    itShouldDisplay('all', ['State', 'Id', 'Title', 'Run Method', 'Run Time']);
+    itShouldDisplay('all', ['State', 'Id', 'Title', 'Run Met', 'Run Time']);
   });
 
   describe('pending', function () {
@@ -94,7 +94,7 @@ describe('show', function () {
         .expect(toNotInclude([execed]))
         .end(done);
     });
-    itShouldDisplay('pending', ['Id', 'Title', 'Is Errored', 'Is Changed']);
+    itShouldDisplay('pending', ['Id', 'Title', 'Is Err', 'Is Cha']);
   });
 
   describe('blocked', function () {
@@ -103,10 +103,10 @@ describe('show', function () {
         .run(show + 'blocked')
         .code(0)
         .expect(toInclude(blocked))
-        .expect(toNotInclude([execed, 'bee41587-59dc-4d89-bf66-8f90b061777d']))
+        .expect(toNotInclude([execed, 'bee41587']))
         .end(done);
     });
-    itShouldDisplay('blocked', ['Id', 'Title', 'Run Method', 'Is Changed', 'Error Message']);
+    itShouldDisplay('blocked', ['Id', 'Title', 'Run Met', 'Is Cha', 'Error Mes']);
   });
 
   describe('done', function () {
@@ -127,7 +127,7 @@ describe('show', function () {
         .run(show + 'changed')
         .code(0)
         .expect(toInclude([changed]))
-        .expect(toNotInclude([execed, errored, 'bee41587-59dc-4d89-bf66-8f90b061777d']))
+        .expect(toNotInclude([execed, errored, 'bee41587']))
         .end(done);
     });
     itShouldDisplay('changed', ['Id', 'Title', 'Signature', 'Run Signature', 'Run Time']);

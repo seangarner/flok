@@ -3,6 +3,7 @@
 ## NEXT
 
  - add validation of migrations
+ - fix logging incorrect month names
  - `flok fix` now offers wipe status option when a migration has changed
  - `flok init` dependencies include description as a comment in the generated migration
  - fix mongodb generator from inserting invalid js

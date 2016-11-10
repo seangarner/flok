@@ -73,7 +73,7 @@ describe('up', function () {
         .run('')
         .before(lock)
         .after(unlock)
-        .stderr('ERROR migrating up: lock already exists')
+        .stderr(/ERROR migrating up: lock already exists/)
         .end(done);
     });
 
@@ -94,7 +94,7 @@ describe('up', function () {
     it('should write a message to stderr', function (done) {
       flok('show')
         .run('')
-        .stderr('ERROR migrating up: lock already exists')
+        .stderr(/ERROR migrating up: lock already exists/)
         .end(done);
     });
 
