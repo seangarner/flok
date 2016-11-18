@@ -2,6 +2,7 @@
 
 ## NEXT
 
+ - skip migrations which have a `flokVersion` which does not start `'1'`
  - add validation of migrations
  - fix logging incorrect month names
  - `flok fix` now offers wipe status option when a migration has changed
