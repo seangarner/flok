@@ -1,6 +1,6 @@
 # flok changelog
 
-## NEXT
+## 0.6.0 (2016/11/18)
 
  - skip migrations which have a `flokVersion` which does not start `'1'`
  - add validation of migrations
