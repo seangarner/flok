@@ -1,6 +1,7 @@
 module.exports.id = '1';
 module.exports.title = '1 ()';
 module.exports.time = 1;
+module.exports.flokVersion = '2';
 
 module.exports.up = function up(mig, flok, done) {
   global.__flokfirst = 1;

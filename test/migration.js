@@ -23,7 +23,7 @@ describe('Migration', function () {
 
   describe('signature', function () {
     it('should return an md5sum of the migration file', function () {
-      migration.signature.should.equal('82a4f55e9274c8ff50dc21672f1eb201');
+      migration.signature.should.equal('cba29192b60a671b8289f0da0cde18a9');
     });
   });
 

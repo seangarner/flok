@@ -6,6 +6,7 @@ var path = require('path');
 module.exports.id = 'f2ccf261-e498-4b21-b49b-805610d5ca94';
 module.exports.title = 'write foobar to temp';
 module.exports.time = '1383778065648';
+module.exports.flokVersion = '2';
 
 const filename = path.join(os.tmpDir(), 'flok_down_test.foobar');
 

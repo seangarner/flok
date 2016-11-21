@@ -48,6 +48,7 @@ flok._loadMigrations(function (err) {
     .export('id', { name: 'id', message: 'id', type: 'string', default: guid()}, '{{id}}')
     .export('title')
     .export('time', new Date().getTime())
+    .export('flokVersion', '2')
     .up('//code to migrate')
     .down('//code to reverse a migration')
     .register('dependencies', getDependencies);

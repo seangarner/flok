@@ -214,7 +214,7 @@ flok.load(function (err) {
     //(status.runTime ASC, time DESC)
     all: ['state', 'id', 'title', 'status.runMethod', 'status.runTime'],
     //(time DESC)
-    pending: ['id', 'title', 'isErrored', 'isChanged'],
+    pending: ['id', 'title', 'isErrored', 'isChanged', 'isIncompatible'],
     //(status.runTime ASC)
     blocked: ['id', 'title', 'status.runMethod', 'isChanged', 'status.error.message'],
     //(status.runTime ASC)
