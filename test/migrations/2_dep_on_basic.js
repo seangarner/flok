@@ -1,6 +1,7 @@
 module.exports.id = '2';
 module.exports.title = '2 (4)';
 module.exports.time = 2;
+module.exports.flokVersion = '2';
 module.exports.dependencies = [
   '4'
 ];
