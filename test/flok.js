@@ -4,6 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var uuid = require('mout/random/guid');
 var typecast = require('mout/string/typecast');
+var should = require('should');
 
 const LOGLEVEL = process.env.LOGLEVEL || 'none';
 const PRINTOBJECTS = process.env.LOGO === undefined ? true : typecast(process.env.LOGO);
@@ -109,6 +110,50 @@ describe('Flok', function () {
         global.__floktest.should.equal(1);
         migrations.should.be.instanceof(Array);
         migrations.length.should.equal(5);
+        done();
+      });
+    });
+
+  });
+
+  describe('firstRun', function () {
+
+    after(() => {
+      try {
+        fs.unlinkSync(path.join(__dirname, 'firstRun', 'flokStatus', '1.json'));
+      } catch (e) {}
+      try {
+        fs.unlinkSync(path.join(__dirname, 'firstRun', 'flokStatus', '2.json'));
+      } catch (e) {}
+      try {
+        fs.unlinkSync(path.join(__dirname, 'firstRunFalse', 'flokStatus', '2.json'));
+      } catch (e) {}
+    });
+
+
+    it('should be null before state has been loaded', function () {
+      var flok = flokme('firstRun');
+      should(flok.firstRun).equal(null);
+    });
+
+    it('should be true if no migrations have yet run', function (done) {
+      var flok = flokme('firstRun');
+      global.__flokFirstRun = [];
+      flok.up(null, (err) => {
+        if (err) return done(err);
+        should(global.__flokFirstRun[0]).equal(true);
+        should(global.__flokFirstRun[1]).equal(true);
+        done();
+      });
+    });
+
+    it('should be false if migrations have run', function (done) {
+      var flok = flokme('firstRunFalse');
+      global.__flokFirstRun = [];
+      flok.up(null, (err) => {
+        if (err) return done(err);
+        should(global.__flokFirstRun[0]).equal(undefined);
+        should(global.__flokFirstRun[1]).equal(false);
         done();
       });
     });
