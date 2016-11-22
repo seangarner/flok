@@ -6,6 +6,7 @@
     + adds mongo server 3.2 compatibility
     + only migrations initialised with flok 2 will be run by flok 2
   - `flok up` will not execute if there are pending migrations from an older flok version
+  - add `firstRun` flag on flok so migrations know when it's running against a pristine db
 
 ## 1.0.0 (2016/11/29)
 
