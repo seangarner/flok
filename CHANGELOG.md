@@ -1,5 +1,9 @@
 # flok changelog
 
+## 1.0.0-beta.1 (2016/11/23)
+
+ - release candidate for "stable" 1.0.0 release
+
 ## 0.6.0 (2016/11/18)
 
  - skip migrations which have a `flokVersion` which does not start `'1'`
@@ -14,7 +18,7 @@
 
 ## 0.5.2 (2014/01/30)
 
-- stop using findAndRemove mongo method during unlock which was leading to mongod locking up
+ - stop using findAndRemove mongo method during unlock which was leading to mongod locking up
 
 ## 0.5.1 (2014/01/13)
 
