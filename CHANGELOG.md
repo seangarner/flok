@@ -1,8 +1,8 @@
 # flok changelog
 
-## 1.0.0-beta.1 (2016/11/23)
+## 1.0.0 (2016/11/29)
 
- - release candidate for "stable" 1.0.0 release
+ - no changes since 0.6.0 but marking as stable
 
 ## 0.6.0 (2016/11/18)
 
