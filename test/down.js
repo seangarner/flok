@@ -7,7 +7,7 @@ const FLOK = path.join(__dirname, '..', 'bin/flok');
 const TEST = path.join(__dirname, '..', 'test');
 
 var status = '{"id":"f2ccf261-e498-4b21-b49b-805610d5ca94","title":"write foobar to temp","runMet' +
-             'hod":"up","signature":"12a2a6ee764a3c813f609aefcb018f97","runTime":"2013-11-07T18:0' +
+             'hod":"up","signature":"b2f9a46b1be2fcabeebe2bc570d7db72","runTime":"2013-11-07T18:0' +
              '4:54.560Z","error":null,"flokVersion":"0.5.0"}';
 
 function flok(migDir) {

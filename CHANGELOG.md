@@ -1,5 +1,13 @@
 # flok changelog
 
+## NEXT MAJOR
+
+  - [major] upgrade bundled mongo driver to `^2.2.x` which contains breaking changes from `^1.x`
+    + adds mongo server 3.2 compatibility
+    + only migrations initialised with flok 2 will be run by flok 2
+  - `flok up` will not execute if there are pending migrations from an older flok version
+  - add `firstRun` flag on flok so migrations know when it's running against a pristine db
+
 ## 1.0.0 (2016/11/29)
 
  - no changes since 0.6.0 but marking as stable
