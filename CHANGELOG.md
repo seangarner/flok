@@ -1,6 +1,6 @@
 # flok changelog
 
-## NEXT MAJOR
+## 2.0.0 (2016/12/01)
 
   - [major] upgrade bundled mongo driver to `^2.2.x` which contains breaking changes from `^1.x`
     + adds mongo server 3.2 compatibility
