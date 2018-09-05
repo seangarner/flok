@@ -1,5 +1,10 @@
 # flok changelog
 
+## 3.0.0 (2018/08/23)
+
+  - [major] upgrade bundled mongo driver to `^3.1.3` which contains breaking changes from `^2.2.0`
+    + adds mongo server 4.0 compatibility
+
 ## 2.0.0 (2016/12/01)
 
   - [major] upgrade bundled mongo driver to `^2.2.x` which contains breaking changes from `^1.x`
