@@ -1,0 +1,13 @@
+  - rewrite tests to either be stateful or inject state before each test
+  - replace config loading
+  - replace arvg parser (meow?)
+  - replace logger
+  - move state to mongo exclusively
+  - move lock to mongo exclusively
+  - setup eslint
+  - async/await
+  - remove pluggability from generators
+  - make lock & blocked different so fail doesn't leave it locked in the same way 'running' does
+  - redo fix to prompt to remove lock?
+  - look at how electron apps get packaged
+  - look at sqs-tools summary for flok show rewrite

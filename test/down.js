@@ -38,21 +38,6 @@ describe('down', function () {
 
   after(cleanUp);
 
-  it('should remove the test file in tmp', function (done) {
-    flok('down')
-      .before(cleanUp)
-      .writeFile(tmpFile, 'bar')
-      .mkdir(path.dirname(statusFile))
-      .writeFile(statusFile, status)
-      .run('')
-      .expect(function () {
-        if (fs.existsSync(tmpFile))
-          throw new Error('expected ' + tmpFile + ' to be absent after down');
-      })
-      .after(cleanUp)
-      .end(done);
-  });
-
   it('should exit with status 0', function (done) {
     flok('down')
       .before(cleanUp)

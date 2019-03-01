@@ -34,14 +34,6 @@ describe('up', function () {
   this.slow(1000);
   this.timeout(3000);
 
-  it('should write the test file in tmp', function (done) {
-    flok('up')
-      .run('')
-      .match(tmpFile, 'baz')
-      .after(cleanUp)
-      .end(done);
-  });
-
   it('should exit with status 0', function (done) {
     flok('up')
       .run('')

@@ -6,35 +6,27 @@ var uuid = require('mout/random/guid');
 var typecast = require('mout/string/typecast');
 var should = require('should');
 
-const LOGLEVEL = process.env.LOGLEVEL || 'none';
-const PRINTOBJECTS = process.env.LOGO === undefined ? true : typecast(process.env.LOGO);
-
 var flokjs;
 var Flok;
 var flok;
 
-function lockFile() {
-  return '/tmp/_flok_test_' + uuid();
-}
+const URL = process.env.MONGO_URL || 'mongodb://localhost:27017/flok_testlocale';
 
-function removeLock() {
-  fs.unlinkSync(flok.lockFile);
-}
 
 function flokme(dir) {
+
+  // TODO remove the temp collections on after
   var flokjs = require('../lib/flok.js');
   var f = new flokjs.Flok({
     migrationsDir: path.join(__dirname, dir),
-    lockFile: lockFile()
+    mongodbStateColl: `flok_test_${Math.random()}`,
+    mongodbLockColl: `flok_test_${Math.random()}`
   });
-  var logger = new flokjs.ConsoleLogger({
-    level: LOGLEVEL,
-    printObjects: PRINTOBJECTS
-  });
-  f.extend(logger);
 
-  f.extend(require('../lib/lock-file'));
-  f.extend(require('../lib/status-file'));
+  f.extend(require('../lib/logger'));
+  require('../lib/flok-mongodb').extend(f, {
+    mongodbUrl: URL
+  });
 
   return f;
 }
@@ -63,12 +55,9 @@ describe('Flok', function () {
 
   describe('extend', function () {
     it('should extend flok functionality with that provided', function () {
-      var logger = new flokjs.ConsoleLogger({
-        level: LOGLEVEL,
-        printObjects: PRINTOBJECTS
-      });
-      flok.extend(logger);
-      flok.log.info.should.equal(logger.log.info);
+      var logger = require('../lib/logger');
+      flok.extend({log: logger});
+      flok.log.info.should.equal(logger.info);
     });
   });
 
@@ -100,7 +89,7 @@ describe('Flok', function () {
   });
 
 
-  describe('up', function () {
+  describe.skip('up', function () {
 
     it('should work', function (done) {
       var flok = flokme('migrations');
@@ -116,20 +105,7 @@ describe('Flok', function () {
 
   });
 
-  describe('firstRun', function () {
-
-    after(() => {
-      try {
-        fs.unlinkSync(path.join(__dirname, 'firstRun', 'flokStatus', '1.json'));
-      } catch (e) {}
-      try {
-        fs.unlinkSync(path.join(__dirname, 'firstRun', 'flokStatus', '2.json'));
-      } catch (e) {}
-      try {
-        fs.unlinkSync(path.join(__dirname, 'firstRunFalse', 'flokStatus', '2.json'));
-      } catch (e) {}
-    });
-
+  describe.skip('firstRun', function () {
 
     it('should be null before state has been loaded', function () {
       var flok = flokme('firstRun');
@@ -160,7 +136,7 @@ describe('Flok', function () {
 
   });
 
-  describe('down', function () {
+  describe.skip('down', function () {
 
     it('should work', function (done) {
       var flok = flokme('migrations');
