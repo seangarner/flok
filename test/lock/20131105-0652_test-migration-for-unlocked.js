@@ -5,12 +5,12 @@ module.exports.time = '1383634330484';
 
 
 //--migrate function
-module.exports.up = function up(mig, flok, done) {
+module.exports.up = function up() {
   //code to migrate
 };
 
 
 //--backout function
-module.exports.down = function down(mig, flok, done) {
+module.exports.down = function down() {
   //code to reverse a migration
 };
