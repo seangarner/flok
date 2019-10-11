@@ -5,7 +5,7 @@
     "type": "git",
     "url": "git://github.com/seangarner/flok.git"
   },
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "Sean Garner <seanlgarner@gmail.com>",
   "description": "Controlled migrations",
   "bin": "./bin/flok",
