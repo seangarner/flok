@@ -7,7 +7,7 @@ def version() {
 pipeline {
   agent { label '!master' }
   tools {
-    nodejs 'node13'
+    nodejs 'node12'
     maven 'maven221'
   }
   parameters {
