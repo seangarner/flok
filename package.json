@@ -24,12 +24,12 @@
     "mout": "0.x"
   },
   "devDependencies": {
-    "mocha": "1.x",
-    "should": "1.x",
+    "mocha": "^6.0.0",
+    "should": "~3.0.0",
     "jshint": "2.x",
     "nixt": ">=0.0.2 <1.0"
   },
   "engines": {
-    "node": ">=6.0"
+    "node": ">=12.0"
   }
 }
