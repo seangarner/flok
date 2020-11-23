@@ -25,7 +25,7 @@ function itShouldDisplay(filter, columns) {
       .expect(function (res) {
         var headers = res.stdout.split('\n')[1];
         columns.forEach(function (col) {
-          headers.should.include(col);
+          headers.should.containEql(col);
         });
       })
       .end(done);
@@ -41,7 +41,7 @@ function count(howMany) {
 function toInclude(a) {
   return function (res) {
     a.forEach(function (val) {
-      res.stdout.should.include(val);
+      res.stdout.should.containEql(val);
     });
   };
 }
@@ -49,7 +49,7 @@ function toInclude(a) {
 function toNotInclude(a) {
   return function (res) {
     a.forEach(function (val) {
-      res.stdout.should.not.include(val);
+      res.stdout.should.not.containEql(val);
     });
   };
 }
