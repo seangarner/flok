@@ -1,5 +1,9 @@
 # flok changelog
 
+## 3.0.2 (2020/11/23)
+
+  - adding support for nodejs 14
+
 ## 3.0.1 (2019/10/11)
 
   - adding support for Jenkins pipeline

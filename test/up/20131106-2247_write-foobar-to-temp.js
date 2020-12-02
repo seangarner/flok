@@ -8,7 +8,7 @@ module.exports.title = 'write foobar to temp';
 module.exports.time = '1383778065648';
 module.exports.flokVersion = '2';
 
-const filename = path.join(os.tmpDir(), 'flok_up_test.foobar');
+const filename = path.join(os.tmpdir(), 'flok_up_test.foobar');
 
 //--migrate function
 module.exports.up = function up(mig, flok, done) {
