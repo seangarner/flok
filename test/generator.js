@@ -57,7 +57,7 @@ describe('generator', function () {
       console.log('any input ok');
       gen._collectSections(function (err, res) {
         if (err) return done(err);
-        res.should.be.a('string');
+        (res).should.be.type('string');
         res.match(/foobar/g).should.have.lengthOf(2);
         res.match(/baz/g).should.have.lengthOf(2);
         console.log();

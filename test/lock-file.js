@@ -37,7 +37,7 @@ describe('lock-file', function () {
       touchLock(lockFile());
       flok._lock(function (err) {
         err.should.be.instanceof(Error);
-        err.message.should.include('lock already exists');
+        err.message.should.startWith('lock already exists');
         done();
         removeLock();
       });
@@ -86,7 +86,7 @@ describe('lock-file', function () {
       flok.lockFile = lockFile();
       flok._unlock(function (err) {
         err.should.be.instanceof(Error);
-        err.message.should.include('lockfile does not exist to be removed');
+        err.message.should.startWith('lockfile does not exist to be removed');
         done();
       });
     });
