@@ -2,12 +2,13 @@ var nixt = require('nixt');
 var path = require('path');
 var fs = require('fs');
 var os = require('os');
+require('should');
 
 const FLOK = path.join(__dirname, '..', 'bin/flok');
 const TEST = path.join(__dirname, '..', 'test');
 
 var status = '{"id":"f2ccf261-e498-4b21-b49b-805610d5ca94","title":"write foobar to temp","runMet' +
-             'hod":"up","signature":"b2f9a46b1be2fcabeebe2bc570d7db72","runTime":"2013-11-07T18:0' +
+             'hod":"up","signature":"6f3f3bc502c29320cf815d47a1d4f7db","runTime":"2013-11-07T18:0' +
              '4:54.560Z","error":null,"flokVersion":"0.5.0"}';
 
 function flok(migDir) {
@@ -22,7 +23,7 @@ function unlock() {
   fs.unlinkSync(path.join(TEST, 'down', 'flok.lock'));
 }
 
-var tmpFile = path.join(os.tmpDir(), 'flok_down_test.foobar');
+var tmpFile = path.join(os.tmpdir(), 'flok_down_test.foobar');
 var statusFile = path.join(TEST, 'down', 'flokStatus', 'f2ccf261-e498-4b21-b49b-805610d5ca94.json');
 
 function cleanUp() {

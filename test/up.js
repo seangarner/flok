@@ -22,7 +22,7 @@ function unlock() {
 }
 
 
-var tmpFile = path.join(os.tmpDir(), 'flok_up_test.foobar');
+var tmpFile = path.join(os.tmpdir(), 'flok_up_test.foobar');
 var statusFile = path.join(TEST, 'up', 'flokStatus', 'f2ccf261-e498-4b21-b49b-805610d5ca94.json');
 
 function cleanUp() {

@@ -1,5 +1,13 @@
 # flok changelog
 
+## 3.0.2 (2020/11/23)
+
+  - adding support for nodejs 14
+
+## 3.0.1 (2019/10/11)
+
+  - adding support for Jenkins pipeline
+
 ## 3.0.0 (2018/08/23)
 
   - [major] upgrade bundled mongo driver to `^3.1.3` which contains breaking changes from `^2.2.0`
