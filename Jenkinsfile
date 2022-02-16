@@ -13,7 +13,7 @@ pipeline {
   parameters {
     string(
       defaultValue: "ci1",
-      description: 'Environment to build and deploy to. Supports regex: dev.* dev1|dev4',
+      description: 'Environment to build and deploy to.',
       name: 'BUILD_ENV'
     )
   }
