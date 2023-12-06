@@ -1,9 +1,9 @@
 {
-  "name": "flok",
-  "homepage": "https://github.com/seangarner/flok",
+  "name": "@dynamicaction/flok",
+  "homepage": "https://github.com/dynamicaction/flok",
   "repository": {
     "type": "git",
-    "url": "git://github.com/seangarner/flok.git"
+    "url": "git://github.com/dynamicaction/flok.git"
   },
   "version": "3.0.2",
   "author": "Sean Garner <seanlgarner@gmail.com>",
@@ -20,7 +20,7 @@
     "colors": "0.x",
     "commander": "2.x",
     "inquirer": "0.x",
-    "mongodb": "^3.6.3",
+    "mongodb": "^4.5.0",
     "mout": "0.x"
   },
   "devDependencies": {
